@@ -596,8 +596,7 @@ void connection_handler_destroy(coap_conn_handler_t *handler)
             }
         }
         int_socket_delete(handler->socket);
-        handler->socket = NULL;
-        ns_dyn_mem_free(handler);
+
     }
 }
 
