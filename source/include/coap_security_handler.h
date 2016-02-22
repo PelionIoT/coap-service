@@ -37,6 +37,9 @@ typedef struct key_block {
     unsigned char value[KEY_BLOCK_LEN];
 } key_block_t;
 
+#define DEFAULT_MIN_TIMEOUT 10000
+#define DEFAULT_MAX_TIMEOUT 39000
+
 typedef int send_cb(int8_t socket_id, uint8_t *address_ptr, uint16_t port, const unsigned char *, size_t);
 typedef int receive_cb(int8_t socket_id, unsigned char *, size_t);
 typedef void start_timer_cb(int8_t timer_id, uint32_t min, uint32_t fin);
@@ -113,6 +116,10 @@ int coap_security_handler_continue_connecting(coap_security_t *sec);
 int coap_security_handler_send_message(coap_security_t *sec, unsigned char *message, size_t len);
 
 int coap_security_send_close_alert(coap_security_t *sec);
+
+int coap_security_send_fatal_alert(coap_security_t *sec, uint8_t message);
+
+int coap_security_send_warning_alert(coap_security_t *sec, uint8_t message);
 
 int coap_security_handler_read(coap_security_t *sec, unsigned char* buffer, size_t len);
 

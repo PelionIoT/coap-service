@@ -226,7 +226,7 @@ bool test_coap_connection_handler_virtual_recv()
     if( 0 != coap_connection_handler_virtual_recv(handler2,buf, 12, &buf, 1) )
         return false;
 
-    nsdynmemlib_stub.returnCounter = 1;
+    nsdynmemlib_stub.returnCounter = 2;
     coap_security_handler_stub.int_value = 0;
     coap_security_handler_stub.sec_obj->_remote_port = 12;
     memset(coap_security_handler_stub.sec_obj->_remote_address, 1, 16 );

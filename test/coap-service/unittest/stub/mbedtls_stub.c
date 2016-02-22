@@ -308,3 +308,8 @@ int mbedtls_ssl_session_reset( mbedtls_ssl_context *ssl )
     }
     return mbedtls_stub.expected_int;
 }
+
+int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *ssl, unsigned char level, unsigned char message )
+{
+    return 0;
+}

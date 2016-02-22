@@ -72,3 +72,9 @@ int coap_security_handler_read(coap_security_t *sec, unsigned char* buffer, size
     }
     return coap_security_handler_stub.int_value;
 }
+
+
+int coap_security_send_fatal_alert(coap_security_t *sec, uint8_t message)
+{
+    return 0;
+}
