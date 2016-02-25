@@ -25,7 +25,7 @@ const int ECJPAKE_SUITES[] = {
 };
 #endif
 
-const static int PSK_SUITES[] = {
+static const int PSK_SUITES[] = {
     MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256,
     MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,
     MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,
@@ -284,83 +284,17 @@ int coap_security_handler_configure_keys( coap_security_t *sec, coap_security_ke
     return ret;
 }
 
-int coap_security_handler_connect(coap_security_t *sec, bool is_server, SecureSocketMode sock_mode, coap_security_keys_t keys){
-    int ret = -1;
-
-    if( !sec ){
-        return ret;
-    }
-    sec->_is_blocking = true;
-
-    int endpoint = MBEDTLS_SSL_IS_CLIENT;
-    if( is_server ){
-        endpoint = MBEDTLS_SSL_IS_SERVER;
-    }
-
-    int mode = MBEDTLS_SSL_TRANSPORT_DATAGRAM;
-    if( sock_mode == TLS ){
-        mode = MBEDTLS_SSL_TRANSPORT_STREAM;
-    }
-
-    if( ( mbedtls_ssl_config_defaults( &sec->_conf,
-                       endpoint,
-                       mode, 0 ) ) != 0 )
-    {
-        return -1;
-    }
-
-    mbedtls_ssl_set_bio( &sec->_ssl, sec,
-                        f_send, f_recv, NULL );
-
-    mbedtls_ssl_set_timer_cb( &sec->_ssl, sec, set_timer,
-                                            get_timer );
-
-    if( coap_security_handler_configure_keys( sec, keys ) != 0 ){
-        return -1;
-    }
-
-    //TODO: Only needed for server type?
-    mbedtls_ssl_conf_dtls_cookies(&sec->_conf, simple_cookie_write,
-                                  simple_cookie_check,
-                                  &sec->_cookie);
-
-    sec->_is_started = true;
-
-    do {
-        ret = mbedtls_ssl_handshake_step( &sec->_ssl );
-        if( ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED ){ //cookie check failed
-            if( is_server ){
-                mbedtls_ssl_session_reset(&sec->_ssl);
-#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
-                if( mbedtls_ssl_set_hs_ecjpake_password(&sec->_ssl, keys._priv, keys._priv_len) != 0 ){
-                    return -1;
-                }
-#endif
-                ret = MBEDTLS_ERR_SSL_WANT_READ; //needed to keep doing
-            }else{
-                ret = -1;
-            }
-        }
-    }while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-           ret == MBEDTLS_ERR_SSL_WANT_WRITE );
-
-    if( ret != 0){
-        ret = -1;
-    }else{
-        if( mbedtls_ssl_get_verify_result( &sec->_ssl ) != 0 )
-            {
-                ret = -1;
-            }
-    }
-
-    return ret;
-}
-
+/**
+ * Return values
+ * 1       -> OK
+ * 0       -> internal server error
+ * < 0     -> error code
+ */
 int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_server, SecureSocketMode sock_mode, coap_security_keys_t keys, uint32_t timeout_min, uint32_t timeout_max)
 {
 
     if( !sec ){
-        return -1;
+        return 0;
     }
     sec->_is_blocking = false;
 
@@ -378,11 +312,11 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
                        endpoint,
                        mode, 0 ) ) != 0 )
     {
-        return -1;
+        return 0;
     }
 
     if(!timeout_max && !timeout_min){
-        mbedtls_ssl_conf_handshake_timeout( &sec->_conf, 10000, 29000 );
+        mbedtls_ssl_conf_handshake_timeout( &sec->_conf, DEFAULT_MIN_TIMEOUT, DEFAULT_MAX_TIMEOUT );
     }
     else{
         mbedtls_ssl_conf_handshake_timeout( &sec->_conf, timeout_min, timeout_max );
@@ -392,7 +326,7 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
 
     if( ( mbedtls_ssl_setup( &sec->_ssl, &sec->_conf ) ) != 0 )
     {
-       return -1;
+       return 0;
     }
 
     mbedtls_ssl_set_bio( &sec->_ssl, sec,
@@ -411,7 +345,7 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
 #endif
 
     if( coap_security_handler_configure_keys( sec, keys ) != 0 ){
-        return -1;
+        return 0;
     }
 
     //Only needed for server type?
@@ -434,9 +368,8 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
 
     if( ret >= 0){
         ret = 1;
-    }else{
-        ret = -1;
     }
+
     return ret;
 }
 
@@ -493,6 +426,30 @@ int coap_security_send_close_alert(coap_security_t *sec)
     if(!mbedtls_ssl_close_notify(&sec->_ssl)){
         coap_security_handler_reset(sec);
         coap_security_handler_init(sec);
+        return 0;
+    }
+    return -1;
+}
+
+int coap_security_send_fatal_alert(coap_security_t *sec, uint8_t message)
+{
+    if( !sec ){
+        return -1;
+    }
+
+    if(!mbedtls_ssl_send_alert_message(&sec->_ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL, message)){
+        return 0;
+    }
+    return -1;
+}
+
+int coap_security_send_warning_alert(coap_security_t *sec, uint8_t message)
+{
+    if( !sec ){
+        return -1;
+    }
+
+    if(!mbedtls_ssl_send_alert_message(&sec->_ssl, MBEDTLS_SSL_ALERT_LEVEL_WARNING, message)){
         return 0;
     }
     return -1;
@@ -557,6 +514,7 @@ int f_recv(void *ctx, unsigned char *buf, size_t len){
 int entropy_poll( void *ctx, unsigned char *output, size_t len,
                            size_t *olen )
 {
+    (void) ctx;
     //TODO: change to more secure random
     randLIB_seed_random();
     char *c = (char*)ns_dyn_mem_temporary_alloc(len);

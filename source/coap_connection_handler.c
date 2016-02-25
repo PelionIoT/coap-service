@@ -287,6 +287,8 @@ static int send_to_socket(int8_t socket_id, uint8_t *address_ptr, uint16_t port,
 
 static int receive_from_socket(int8_t socket_id, unsigned char *buf, size_t len)
 {
+    (void) len;
+
     internal_socket_t *sock = int_socket_find_by_socket_id(socket_id);
     if( sock->data && sock->data_len > 0 ){
         memcpy( buf, sock->data, sock->data_len );
@@ -418,14 +420,29 @@ static void secure_recv_sckt_msg(void *cb_res)
         // Start handshake
         if( !session->sec_handler->_is_started ){
             uint8_t *pw = (uint8_t *)ns_dyn_mem_alloc(64);
+            if(!pw){
+                secure_session_delete(session);
+                return;
+            }
             uint8_t pw_len;
             if( sock->parent->_get_password_cb && 0 == sock->parent->_get_password_cb(sock->listen_socket, src_address.address, src_address.identifier, pw, &pw_len)){
                 //TODO: get_password_cb should support certs and PSK also
+                int connect_ret = 0;
                 coap_security_keys_t keys;
+
                 keys._priv = pw;
                 keys._priv_len = pw_len;
-                coap_security_handler_connect_non_blocking(session->sec_handler, true, DTLS, keys, sock->timeout_min, sock->timeout_max);
-                //TODO: error handling
+
+                connect_ret = coap_security_handler_connect_non_blocking(session->sec_handler, true, DTLS, keys, sock->timeout_min, sock->timeout_max);
+                if(connect_ret == 0){
+                    // Out of memory or similar internal error occurred
+                    coap_security_send_fatal_alert(session->sec_handler, MBEDTLS_SSL_ALERT_MSG_INTERNAL_ERROR);
+                    secure_session_delete(session);
+                }
+                else if((connect_ret < 0) && (connect_ret != MBEDTLS_ERR_SSL_WANT_READ && connect_ret != MBEDTLS_ERR_SSL_WANT_WRITE)){
+                    // Do not send alert - library should send it
+                    secure_session_delete(session);
+                }
             }
             ns_dyn_mem_free(pw);
         }else{
@@ -444,8 +461,8 @@ static void secure_recv_sckt_msg(void *cb_res)
                     }
                 }
                 else if (ret < 0){
-                    // error handling
                     // TODO: here we also should clear CoAP retransmission buffer and inform that CoAP request sending is failed.
+                    // Do not send alert - library should send it
                     secure_session_delete(session);
                 }
             //Session valid
@@ -454,8 +471,9 @@ static void secure_recv_sckt_msg(void *cb_res)
                 int len = 0;
                 len = coap_security_handler_read(session->sec_handler, data, sock->data_len);
                 if( len < 0 ){
+                    // Do not send alert - library should send it
                     ns_dyn_mem_free(data);
-                    secure_session_delete( session );
+                    secure_session_delete(session);
                 }else{
                     if( sock->parent->_recv_cb ){
                         sock->parent->_recv_cb(sock->listen_socket, src_address.address, src_address.identifier, data, len);
@@ -516,14 +534,28 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
         }
         if( !session->sec_handler->_is_started ){
             uint8_t *pw = (uint8_t *)ns_dyn_mem_alloc(64);
+            if(!pw){
+                secure_session_delete(session);
+                return -1;
+            }
             uint8_t pw_len;
             if( sock->parent->_get_password_cb && 0 == sock->parent->_get_password_cb(sock->listen_socket, address, port, pw, &pw_len)){
                 //TODO: get_password_cb should support certs and PSK also
+                int connect_ret;
                 coap_security_keys_t keys;
+
                 keys._priv = pw;
                 keys._priv_len = pw_len;
-                coap_security_handler_connect_non_blocking(session->sec_handler, true, DTLS, keys, handler->socket->timeout_min, handler->socket->timeout_max);
-                //TODO: error handling
+
+                connect_ret = coap_security_handler_connect_non_blocking(session->sec_handler, true, DTLS, keys, handler->socket->timeout_min, handler->socket->timeout_max);
+                if(connect_ret == 0){
+                    coap_security_send_fatal_alert(session->sec_handler, MBEDTLS_SSL_ALERT_MSG_INTERNAL_ERROR);
+                    secure_session_delete(session);
+                }
+                else if((connect_ret < 0) && (connect_ret != MBEDTLS_ERR_SSL_WANT_READ && connect_ret != MBEDTLS_ERR_SSL_WANT_WRITE)){
+                    // Do not send alert - library should send it
+                    secure_session_delete(session);
+                }
                 ns_dyn_mem_free(pw);
                 return 0;
             }else{
@@ -544,11 +576,10 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
                 }
                 else if(ret < 0)
                 {
-                    // error handling
                     // TODO: here we also should clear CoAP retransmission buffer and inform that CoAP request sending is failed.
+                    // Do not send alert - library should send it
                     secure_session_delete(session);
                 }
-                //TODO: error handling
             }else{
                 unsigned char *data = ns_dyn_mem_temporary_alloc(sock->data_len);
                 int len = 0;
@@ -676,20 +707,31 @@ int coap_connection_handler_send_data(coap_conn_handler_t *handler, ns_address_t
             handler->socket->dest_addr.type = dest_addr->type;
             uint8_t *pw = (uint8_t *)ns_dyn_mem_alloc(64);
             if(!pw){
-                //todo: free secure session?
+                secure_session_delete(session);
                 return -1;
             }
             uint8_t pw_len;
             if( handler->_get_password_cb && 0 == handler->_get_password_cb(handler->socket->listen_socket, dest_addr->address, dest_addr->identifier, pw, &pw_len)){
                 //TODO: get_password_cb should support certs and PSK also
+                int connect_ret;
                 coap_security_keys_t keys;
+
                 keys._priv = pw;
                 keys._priv_len = pw_len;
-                coap_security_handler_connect_non_blocking(session->sec_handler, false, DTLS, keys, handler->socket->timeout_min, handler->socket->timeout_max);
+
+                connect_ret = coap_security_handler_connect_non_blocking(session->sec_handler, false, DTLS, keys, handler->socket->timeout_min, handler->socket->timeout_max);
+                if(connect_ret == 0){
+                    coap_security_send_fatal_alert(session->sec_handler, MBEDTLS_SSL_ALERT_MSG_INTERNAL_ERROR);
+                    secure_session_delete(session);
+                }
+                else if((connect_ret < 0) && (connect_ret != MBEDTLS_ERR_SSL_WANT_READ && connect_ret != MBEDTLS_ERR_SSL_WANT_WRITE)){
+                    // Do not send alert - library should send it
+                    secure_session_delete(session);
+                }
                 ns_dyn_mem_free(pw);
                 return -2;
             }else{
-                //free secure session?
+                secure_session_delete(session);
                 ns_dyn_mem_free(pw);
                 return -1;
             }

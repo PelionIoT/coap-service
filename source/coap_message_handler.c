@@ -311,6 +311,7 @@ int8_t coap_message_handler_response_send(coap_msg_handler_t *handle, int8_t ser
     uint16_t data_len;
     uint8_t *data_ptr;
     (void) options;
+    (void) service_id;
 
     tr_debug("Service %d, send CoAP response", service_id);
     if (!request_ptr || !handle) {
