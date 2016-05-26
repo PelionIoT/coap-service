@@ -13,7 +13,7 @@
 #include "eventOS_event_timer.h"
 #include "coap_service_api_internal.h"
 
-#define TRACE_GROUP "ThCH"
+#define TRACE_GROUP "CsCH"
 
 typedef enum session_state_e {
     SECURE_SESSION_HANDSHAKE_ONGOING = 0,
@@ -112,6 +112,8 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, uint8_
     if(!address_ptr){
         return NULL;
     }
+
+    tr_debug("Start secure session with %s:%d", trace_ipv6(address_ptr), port);
 
     if(MAX_SECURE_SESSION_COUNT <= ns_list_count(&secure_session_list)){
         // Seek & destroy oldest session where close notify have been sent
@@ -464,6 +466,7 @@ static void secure_recv_sckt_msg(void *cb_res)
                 int ret = coap_security_handler_continue_connecting(session->sec_handler);
                 // Handshake done
                 if(ret == 0){
+                    tr_debug("DTLS handshake done %s:%d", trace_ipv6(src_address.address), src_address.identifier);
                     eventOS_timeout_cancel(session->timer.timer);
                     session->timer.timer = NULL;
                     session->session_state = SECURE_SESSION_OK;
@@ -476,6 +479,7 @@ static void secure_recv_sckt_msg(void *cb_res)
                 else if (ret < 0){
                     // error handling
                     // TODO: here we also should clear CoAP retransmission buffer and inform that CoAP request sending is failed.
+                    tr_debug("DTLS handshake failed %d - %s:%d",ret, trace_ipv6(src_address.address), src_address.identifier);
                     secure_session_delete(session);
                 }
             //Session valid
@@ -484,6 +488,12 @@ static void secure_recv_sckt_msg(void *cb_res)
                 int len = 0;
                 len = coap_security_handler_read(session->sec_handler, data, sock->data_len);
                 if( len < 0 ){
+                    if(len == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY){
+                        tr_debug("DTLS close notify received from %s:%d", trace_ipv6(src_address.address), src_address.identifier);
+                    }
+                    else{
+                        tr_debug("DTLS read error %d from %s:%d", len, trace_ipv6(src_address.address), src_address.identifier);
+                    }
                     ns_dyn_mem_free(data);
                     secure_session_delete( session );
                 }else{
@@ -567,6 +577,7 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
             if(session->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
                 int ret = coap_security_handler_continue_connecting(session->sec_handler);
                 if(ret == 0){
+                    tr_debug("DTLS handshake done %s:%d", trace_ipv6(address), port);
                     session->session_state = SECURE_SESSION_OK;
                     if( handler->_security_done_cb ){
                         handler->_security_done_cb(sock->listen_socket,
@@ -579,6 +590,7 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
                 {
                     // error handling
                     // TODO: here we also should clear CoAP retransmission buffer and inform that CoAP request sending is failed.
+                    tr_debug("DTLS handshake failed %d - %s:%d",ret, trace_ipv6(address), port);
                     secure_session_delete(session);
                 }
                 //TODO: error handling
@@ -587,6 +599,12 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
                 int len = 0;
                 len = coap_security_handler_read(session->sec_handler, data, sock->data_len);
                 if( len < 0 ){
+                    if(len == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY){
+                        tr_debug("DTLS close notify received from %s:%d", trace_ipv6(address), port);
+                    }
+                    else{
+                        tr_debug("DTLS read error %d from %s:%d", len, trace_ipv6(address), port);
+                    }
                     ns_dyn_mem_free(data);
                     secure_session_delete( session );
                     return 0;
@@ -647,6 +665,7 @@ void connection_handler_destroy(coap_conn_handler_t *handler)
 void connection_handler_close_secure_connection( coap_conn_handler_t *handler, uint8_t destination_addr_ptr[static 16], uint16_t port )
 {
     if(handler){
+        tr_debug("Close DTLS session %s:%d", trace_ipv6(destination_addr_ptr), port);
         if( handler->socket && handler->socket->is_secure){
             secure_session_t *session = secure_session_find( handler->socket, destination_addr_ptr, port);
             if( session ){
@@ -783,11 +802,13 @@ void coap_connection_handler_exec(uint32_t time)
             if(cur_ptr->session_state == SECURE_SESSION_CLOSED ||
                     cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
                 if((cur_ptr->last_contact_time +  CLOSED_SECURE_SESSION_TIMEOUT) <= time){
+                    tr_debug("DTLS handshake timed out %s:%d", trace_ipv6(cur_ptr->parent->dest_addr.address), cur_ptr->parent->listen_port);
                     secure_session_delete(cur_ptr);
                 }
             }
             if(cur_ptr->session_state == SECURE_SESSION_OK){
                 if((cur_ptr->last_contact_time +  OPEN_SECURE_SESSION_TIMEOUT) <= time){
+                    tr_debug("DTLS session timed out %s:%d", trace_ipv6(cur_ptr->parent->dest_addr.address), cur_ptr->parent->listen_port);
                     secure_session_delete(cur_ptr);
                 }
             }
