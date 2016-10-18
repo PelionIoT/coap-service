@@ -2,6 +2,10 @@
  * Copyright (c) 2015-2016 ARM Limited. All Rights Reserved.
  */
 
+#include "mbedtls/platform.h"
+
+#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT) || defined(MBEDTLS_TEST_NULL_ENTROPY)
+
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
@@ -579,3 +583,5 @@ int entropy_poll( void *ctx, unsigned char *output, size_t len,
     ns_dyn_mem_free(c);
     return( 0 );
 }
+
+#endif /* defined(MBEDTLS_ENTROPY_HARDWARE_ALT) || defined(MBEDTLS_TEST_NULL_ENTROPY) */
