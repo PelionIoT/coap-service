@@ -74,6 +74,7 @@ static coap_transaction_t *transaction_create(void)
     if (this) {
         memset(this, 0, sizeof(coap_transaction_t));
         this->client_request = true;// default to client initiated method
+        this->create_time = coap_service_get_internal_timer_ticks();
         ns_list_add_to_start(&request_list, this);
     }
 
@@ -358,8 +359,17 @@ int8_t coap_message_handler_response_send(coap_msg_handler_t *handle, int8_t ser
 }
 
 int8_t coap_message_handler_exec(coap_msg_handler_t *handle, uint32_t current_time){
+
     if( !handle ){
         return -1;
     }
+
+    // Remove outdated transactions from queue
+    ns_list_foreach_safe(coap_transaction_t, transaction, &request_list) {
+        if ((transaction->create_time + TRANSACTION_LIFETIME) < current_time) {
+            transaction_delete(transaction);
+        }
+    }
+
     return sn_coap_protocol_exec(handle->coap, current_time);
 }
