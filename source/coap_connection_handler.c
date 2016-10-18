@@ -2,6 +2,10 @@
  * Copyright (c) 2015-2016 ARM Limited. All Rights Reserved.
  */
 
+#include "mbedtls/platform.h"
+
+#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT) || defined(MBEDTLS_TEST_NULL_ENTROPY)
+
 #include <string.h>
 #include "coap_connection_handler.h"
 #include "coap_security_handler.h"
@@ -806,3 +810,5 @@ void coap_connection_handler_exec(uint32_t time)
         }
     }
 }
+
+#endif /* defined(MBEDTLS_ENTROPY_HARDWARE_ALT) || defined(MBEDTLS_TEST_NULL_ENTROPY) */
