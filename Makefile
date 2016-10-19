@@ -46,7 +46,7 @@ SRCS := \
 	source/coap_service_api.c \
 
 override CFLAGS += -DVERSION='"$(VERSION)"'
-
+override CFLAGS += -DHAVE_DEBUG
 include ../libService/toolchain_rules.mk
 
 $(eval $(call generate_rules,$(LIB),$(SRCS)))

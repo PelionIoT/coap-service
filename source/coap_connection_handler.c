@@ -72,7 +72,7 @@ typedef struct secure_session {
 } secure_session_t;
 
 static NS_LIST_DEFINE(secure_session_list, secure_session_t, link);
-static int send_to_socket(int8_t socket_id, uint8_t *address_ptr, uint16_t port, const unsigned char *buf, size_t len);
+static int send_to_socket(int8_t socket_id, uint8_t *address_ptr, uint16_t port, uint8_t source_addr[static 16], const unsigned char *buf, size_t len);
 static int receive_from_socket(int8_t socket_id, unsigned char *buf, size_t len);
 static void start_timer(int8_t timer_id, uint32_t int_ms, uint32_t fin_ms);
 static int timer_status(int8_t timer_id);
@@ -235,6 +235,12 @@ static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephem
         socket_setsockopt(this->listen_socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_MULTICAST_HOPS, &(const int16_t) {
             16
         }, sizeof(int16_t));
+
+        // Set socket option to receive packet info
+        socket_setsockopt(this->listen_socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_RECVPKTINFO, &(const bool) {
+            1
+        }, sizeof(bool));
+
     }else{
         this->listen_socket = -1;
     }
@@ -290,7 +296,46 @@ static internal_socket_t *int_socket_find(uint16_t port, bool is_secure, bool is
     return this;
 }
 
-static int send_to_socket(int8_t socket_id, uint8_t *address_ptr, uint16_t port, const unsigned char *buf, size_t len)
+static int8_t set_socket_source_address(int8_t socket_id, ns_address_t *address, uint8_t source_address[static 16], uint8_t *buffer, uint16_t length)
+{
+    ns_iovec_t msg_iov;
+    ns_msghdr_t msghdr;
+    ns_cmsghdr_t *cmsg;
+    ns_in6_pktinfo_t *pktinfo;
+    uint8_t ancillary_databuffer[NS_CMSG_SPACE(sizeof(ns_in6_pktinfo_t))];
+
+
+    msghdr.msg_name = address;
+    msghdr.msg_namelen = sizeof(ns_address_t);
+    msghdr.msg_iov = &msg_iov;
+    msghdr.msg_iovlen = 1;
+    msghdr.flags = 0;
+
+    if (source_address) {
+        tr_debug("send from source address %s", trace_array(source_address, 16));
+        msghdr.msg_control = ancillary_databuffer;
+        msghdr.msg_controllen = sizeof(ancillary_databuffer);
+
+        cmsg = NS_CMSG_FIRSTHDR(&msghdr);
+        cmsg->cmsg_type = SOCKET_IPV6_PKTINFO;
+        cmsg->cmsg_level = SOCKET_IPPROTO_IPV6;
+        cmsg->cmsg_len = NS_CMSG_LEN(sizeof(ns_in6_pktinfo_t));
+
+        pktinfo = (ns_in6_pktinfo_t*)NS_CMSG_DATA(cmsg);
+        pktinfo->ipi6_ifindex = 0;
+        memcpy(pktinfo->ipi6_addr, source_address, 16);
+    } else {
+        msghdr.msg_control = NULL;
+        msghdr.msg_controllen = 0;
+    }
+
+    msg_iov.iov_base = buffer;
+    msg_iov.iov_len = length;
+
+    return socket_sendmsg(socket_id, &msghdr, 0);
+}
+
+static int send_to_socket(int8_t socket_id, uint8_t *address_ptr, uint16_t port, uint8_t source_addr[static 16], const unsigned char *buf, size_t len)
 {
     internal_socket_t *sock = int_socket_find_by_socket_id(socket_id);
     if(!sock){
@@ -314,7 +359,8 @@ static int send_to_socket(int8_t socket_id, uint8_t *address_ptr, uint16_t port,
     socket_setsockopt(sock->listen_socket, SOCKET_IPPROTO_IPV6, SOCKET_LINK_LAYER_SECURITY, &securityLinkLayer, sizeof(int8_t));
     //For some reason socket_sendto returns 0 in success, while other socket impls return number of bytes sent!!!
     //TODO: check if address_ptr is valid and use that instead if it is
-    int ret = socket_sendto(sock->listen_socket, &sock->dest_addr, (unsigned char*)buf, len);
+
+    int8_t ret = set_socket_source_address(sock->listen_socket, &sock->dest_addr, source_addr, (unsigned char*)buf, len);
     if( ret < 0 )
         return ret;
     return len;
@@ -406,10 +452,15 @@ static int timer_status(int8_t timer_id)
     return TIMER_STATE_CANCELLED;
 }
 
-static int read_data(socket_callback_t *sckt_data, internal_socket_t *sock, ns_address_t *src_address)
+static int read_data(socket_callback_t *sckt_data, internal_socket_t *sock, ns_address_t *src_address, uint8_t dst_address[static 16])
 {
+    ns_iovec_t msg_iov;
+    ns_msghdr_t msghdr;
+
     sock->data_len = 0;
     if (sckt_data->event_type == SOCKET_DATA && sckt_data->d_len > 0) {
+
+
         if( sock->data ){
             ns_dyn_mem_free(sock->data);
             sock->data = NULL;
@@ -419,7 +470,21 @@ static int read_data(socket_callback_t *sckt_data, internal_socket_t *sock, ns_a
             sock->data = NULL;
             return -1;
         }
-        sock->data_len = socket_read(sckt_data->socket_id, src_address, sock->data, sckt_data->d_len);
+
+        uint8_t ancillary_databuffer[NS_CMSG_SPACE(sizeof(ns_in6_pktinfo_t))];
+
+        msghdr.msg_name = src_address;
+        msghdr.msg_namelen = sizeof(ns_address_t);
+        msghdr.msg_iov = &msg_iov;
+        msghdr.msg_iovlen = 1;
+        msghdr.msg_control = ancillary_databuffer;
+        msghdr.msg_controllen = sizeof(ancillary_databuffer);
+        msghdr.flags = 0;
+
+        msg_iov.iov_base = sock->data;
+        msg_iov.iov_len = sckt_data->d_len;
+
+        sock->data_len = socket_recvmsg(sckt_data->socket_id, &msghdr, 0);
     }
     if( sock->data_len < 1){
         ns_dyn_mem_free(sock->data);
@@ -427,6 +492,20 @@ static int read_data(socket_callback_t *sckt_data, internal_socket_t *sock, ns_a
         sock->data_len = 0;
         return -1;
     }
+    ns_cmsghdr_t *cmsg = NS_CMSG_FIRSTHDR(&msghdr);
+    ns_in6_pktinfo_t *pkt;
+    while (cmsg) {
+        switch (cmsg->cmsg_type) {
+            case SOCKET_IPV6_PKTINFO:
+                pkt = (ns_in6_pktinfo_t*)NS_CMSG_DATA(cmsg);
+                break;
+            default:
+                break;
+        }
+        cmsg = NS_CMSG_NXTHDR(&msghdr, cmsg);
+    }
+    memcpy(dst_address, pkt->ipi6_addr, 16);
+
     return 0;
 }
 
@@ -435,8 +514,9 @@ static void secure_recv_sckt_msg(void *cb_res)
     socket_callback_t *sckt_data = cb_res;
     internal_socket_t *sock = int_socket_find_by_socket_id(sckt_data->socket_id);
     ns_address_t src_address;
+    uint8_t dst_address[16];
 
-    if( sock && read_data(sckt_data, sock, &src_address) == 0 ){
+    if( sock && read_data(sckt_data, sock, &src_address, dst_address) == 0 ){
         secure_session_t *session = secure_session_find(sock, src_address.address, src_address.identifier);
 
         // Create session
@@ -497,7 +577,7 @@ static void secure_recv_sckt_msg(void *cb_res)
                     ns_dyn_mem_free(data);
                 }else{
                     if( sock->parent->_recv_cb ){
-                        sock->parent->_recv_cb(sock->listen_socket, src_address.address, src_address.identifier, data, len);
+                        sock->parent->_recv_cb(sock->listen_socket, src_address.address, src_address.identifier, dst_address, data, len);
                     }
                     ns_dyn_mem_free(data);
                 }
@@ -511,9 +591,11 @@ static void recv_sckt_msg(void *cb_res)
     socket_callback_t *sckt_data = cb_res;
     internal_socket_t *sock = int_socket_find_by_socket_id(sckt_data->socket_id);
     ns_address_t src_address;
-    if( sock && read_data(sckt_data, sock, &src_address) == 0 ){
+    uint8_t dst_address[16];
+
+    if( sock && read_data(sckt_data, sock, &src_address, dst_address) == 0 ){
         if(sock->parent && sock->parent->_recv_cb){
-            sock->parent->_recv_cb(sock->listen_socket, src_address.address, src_address.identifier, sock->data, sock->data_len);
+            sock->parent->_recv_cb(sock->listen_socket, src_address.address, src_address.identifier, dst_address, sock->data, sock->data_len);
         }
         ns_dyn_mem_free(sock->data);
         sock->data = NULL;
@@ -604,7 +686,7 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
                     return 0;
                 } else {
                     if (sock->parent->_recv_cb) {
-                        sock->parent->_recv_cb(sock->listen_socket, address, port, data, len);
+                        sock->parent->_recv_cb(sock->listen_socket, address, port, NULL, data, len); // TERO TBD
                     }
                     ns_dyn_mem_free(data);
                     data = NULL;
@@ -613,8 +695,9 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
             }
         }
     }else{
+        /* unsecure*/
         if( sock->parent->_recv_cb ){
-            sock->parent->_recv_cb(sock->listen_socket, address, port, sock->data, sock->data_len);
+            sock->parent->_recv_cb(sock->listen_socket, address, port, NULL, sock->data, sock->data_len); // TERO TBD
         }
         if( sock->data ){
             ns_dyn_mem_free(sock->data);
@@ -702,7 +785,7 @@ int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16
     return 0;
 }
 
-int coap_connection_handler_send_data(coap_conn_handler_t *handler, ns_address_t *dest_addr, uint8_t *data_ptr, uint16_t data_len, bool bypass_link_sec)
+int coap_connection_handler_send_data(coap_conn_handler_t *handler, ns_address_t *dest_addr, uint8_t src_address[static 16], uint8_t *data_ptr, uint16_t data_len, bool bypass_link_sec)
 {
     if( !handler || !handler->socket || !dest_addr){
         return -1;
@@ -757,9 +840,11 @@ int coap_connection_handler_send_data(coap_conn_handler_t *handler, ns_address_t
         if( bypass_link_sec ){
             securityLinkLayer = 0;
         }
+
         socket_setsockopt(handler->socket->listen_socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_ADDR_PREFERENCES, &opt_name, sizeof(int));
         socket_setsockopt(handler->socket->listen_socket, SOCKET_IPPROTO_IPV6, SOCKET_LINK_LAYER_SECURITY, &securityLinkLayer, sizeof(int8_t));
-        return socket_sendto(handler->socket->listen_socket, dest_addr, data_ptr, data_len);
+
+        return set_socket_source_address(handler->socket->listen_socket, dest_addr, src_address, data_ptr, data_len);
     }
 }
 

@@ -49,6 +49,7 @@ typedef struct coap_msg_handler_s {
 
 typedef struct coap_transaction {
     uint8_t remote_address[16];
+    uint8_t source_address[16];
     uint8_t token[4];
     uint32_t create_time;
     uint16_t remote_port;
@@ -58,6 +59,7 @@ typedef struct coap_transaction {
     uint8_t options;
     uint8_t *data_ptr;
     bool client_request: 1;
+    bool have_source_address:1;
 
     coap_message_handler_response_recv *resp_cb;
     ns_list_link_t link;
@@ -73,7 +75,7 @@ extern coap_transaction_t *coap_message_handler_transaction_valid(coap_transacti
 
 extern coap_transaction_t *coap_message_handler_find_transaction(uint8_t *address_ptr, uint16_t port);
 
-extern int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t socket_id, uint8_t source_addr_ptr[static 16], uint16_t port,
+extern int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t socket_id, uint8_t source_addr_ptr[static 16], uint16_t port, uint8_t dst_addr_ptr[static 16],
                                                          uint8_t *data_ptr, uint16_t data_len, int16_t (cb)(int8_t, sn_coap_hdr_s *, coap_transaction_t *));
 
 extern uint16_t coap_message_handler_request_send(coap_msg_handler_t *handle, int8_t service_id, uint8_t options, const uint8_t destination_addr[static 16],

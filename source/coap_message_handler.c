@@ -74,6 +74,7 @@ static coap_transaction_t *transaction_create(void)
     if (this) {
         memset(this, 0, sizeof(coap_transaction_t));
         this->client_request = true;// default to client initiated method
+        this->have_source_address = false;
         this->create_time = coap_service_get_internal_timer_ticks();
         ns_list_add_to_start(&request_list, this);
     }
@@ -177,7 +178,7 @@ coap_transaction_t *coap_message_handler_find_transaction(uint8_t *address_ptr, 
     return transaction_find_by_address( address_ptr, port );
 }
 
-int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t socket_id, uint8_t source_addr_ptr[static 16], uint16_t port,
+int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t socket_id, uint8_t source_addr_ptr[static 16], uint16_t port, uint8_t dst_addr_ptr[static 16],
                                       uint8_t *data_ptr, uint16_t data_len, int16_t (cb)(int8_t, sn_coap_hdr_s *, coap_transaction_t *))
 {
     if( !cb || !handle ){
@@ -209,6 +210,10 @@ int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t
             transaction_ptr->service_id = coap_service_id_find_by_socket(socket_id);
             transaction_ptr->msg_id = coap_message->msg_id;
             transaction_ptr->client_request = false;// this is server transaction
+            if (dst_addr_ptr) {
+                memcpy(transaction_ptr->source_address, dst_addr_ptr, 16);
+                transaction_ptr->have_source_address = true;
+            }
             memcpy(transaction_ptr->remote_address, source_addr_ptr, 16);
             transaction_ptr->remote_port = port;
 
