@@ -302,14 +302,16 @@ static internal_socket_t *int_socket_find(uint16_t port, bool is_secure, bool is
 
 static int8_t send_to_real_socket(int8_t socket_id, const ns_address_t *address, const uint8_t source_address[static 16], const void *buffer, uint16_t length)
 {
-    ns_iovec_t msg_iov;
-    ns_msghdr_t msghdr;
-
-    msghdr.msg_name = (void*)address;
-    msghdr.msg_namelen = sizeof(ns_address_t);
-    msghdr.msg_iov = &msg_iov;
-    msghdr.msg_iovlen = 1;
-    msghdr.flags = 0;
+    ns_iovec_t msg_iov = {
+        .iov_base = (void *) buffer,
+        .iov_len = length
+    };
+    ns_msghdr_t msghdr = {
+        .msg_name = (void *) address,
+        .msg_namelen = sizeof(ns_address_t),
+        .msg_iov = &msg_iov,
+        .msg_iovlen = 1
+    };
 
     if (memcmp(source_address, ns_in6addr_any, 16)) {
         uint8_t ancillary_databuffer[NS_CMSG_SPACE(sizeof(ns_in6_pktinfo_t))];
@@ -328,13 +330,7 @@ static int8_t send_to_real_socket(int8_t socket_id, const ns_address_t *address,
         pktinfo = (ns_in6_pktinfo_t*)NS_CMSG_DATA(cmsg);
         pktinfo->ipi6_ifindex = 0;
         memcpy(pktinfo->ipi6_addr, source_address, 16);
-    } else {
-        msghdr.msg_control = NULL;
-        msghdr.msg_controllen = 0;
     }
-
-    msg_iov.iov_base = (void *)buffer;
-    msg_iov.iov_len = length;
 
     return socket_sendmsg(socket_id, &msghdr, 0);
 }
@@ -483,7 +479,6 @@ static int read_data(socket_callback_t *sckt_data, internal_socket_t *sock, ns_a
         msghdr.msg_iovlen = 1;
         msghdr.msg_control = ancillary_databuffer;
         msghdr.msg_controllen = sizeof(ancillary_databuffer);
-        msghdr.flags = 0;
 
         msg_iov.iov_base = sock->data;
         msg_iov.iov_len = sckt_data->d_len;
