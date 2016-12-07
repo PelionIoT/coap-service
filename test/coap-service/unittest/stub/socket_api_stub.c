@@ -86,7 +86,7 @@ int8_t socket_sendto(int8_t socket, ns_address_t *address, uint8_t *buffer, uint
 
     return socket_api_stub.int8_value;
 }
-int8_t socket_read_session_address(int8_t socket, ns_address_t *address)
+int8_t socket_getpeername(int8_t socket, ns_address_t *address)
 {
     if( socket_api_stub.counter >= 0){
         return socket_api_stub.values[socket_api_stub.counter--];
