@@ -74,7 +74,9 @@ static void set_timer( void *sec_obj, uint32_t int_ms, uint32_t fin_ms );
 static int get_timer( void *sec_obj );
 static int coap_security_handler_configure_keys( coap_security_t *sec, coap_security_keys_t keys );
 
+#ifdef COAP_SERVICE_HAS_STRONG_ENTROPY_SOURCE
 int entropy_poll( void *data, unsigned char *output, size_t len, size_t *olen );
+#endif
 //Point these back to M2MConnectionHandler!!!
 int f_send( void *ctx, const unsigned char *buf, size_t len );
 int f_recv(void *ctx, unsigned char *buf, size_t len);
@@ -97,12 +99,12 @@ static int coap_security_handler_init(coap_security_t *sec){
 
     sec->_is_started = false;
 
-    //TODO: Must have at least 1 strong entropy source, otherwise DTLS will fail.
-    //This is NOT strong even we say it is!
+#ifdef COAP_SERVICE_HAS_STRONG_ENTROPY_SOURCE
     if( mbedtls_entropy_add_source( &sec->_entropy, entropy_poll, NULL,
                                 128, 1 ) < 0 ){
         return -1;
     }
+#endif
 
     if( ( mbedtls_ctr_drbg_seed( &sec->_ctr_drbg, mbedtls_entropy_func, &sec->_entropy,
                                (const unsigned char *) pers,
@@ -604,6 +606,7 @@ int f_recv(void *ctx, unsigned char *buf, size_t len){
     return sec->_receive_cb(sec->_socket_id, buf, len);
 }
 
+#ifdef COAP_SERVICE_HAS_STRONG_ENTROPY_SOURCE
 int entropy_poll( void *ctx, unsigned char *output, size_t len,
                            size_t *olen )
 {
@@ -624,5 +627,6 @@ int entropy_poll( void *ctx, unsigned char *output, size_t len,
     ns_dyn_mem_free(c);
     return( 0 );
 }
+#endif
 
 #endif // COAP_SECURITY_AVAILABLE

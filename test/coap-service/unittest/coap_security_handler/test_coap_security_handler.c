@@ -36,11 +36,6 @@ bool test_thread_security_create()
     if( NULL != coap_security_create(1,2,NULL,ECJPAKE,&send_to_socket, &receive_from_socket, &start_timer_callback, &timer_status_callback) )
         return false;
 
-    nsdynmemlib_stub.returnCounter = 1;
-    mbedtls_stub.expected_int = -1;
-    if( NULL != coap_security_create(1,2,NULL,ECJPAKE,&send_to_socket, &receive_from_socket, &start_timer_callback, &timer_status_callback) )
-        return false;
-
     mbedtls_stub.expected_int = 0;
     nsdynmemlib_stub.returnCounter = 2;
     mbedtls_stub.crt_expected_int = -1;
