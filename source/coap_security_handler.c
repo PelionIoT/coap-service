@@ -74,7 +74,7 @@ static void set_timer( void *sec_obj, uint32_t int_ms, uint32_t fin_ms );
 static int get_timer( void *sec_obj );
 static int coap_security_handler_configure_keys( coap_security_t *sec, coap_security_keys_t keys );
 
-#ifdef COAP_SERVICE_HAS_STRONG_ENTROPY_SOURCE
+#ifdef COAP_SERVICE_PROVIDE_STRONG_ENTROPY_SOURCE
 int entropy_poll( void *data, unsigned char *output, size_t len, size_t *olen );
 #endif
 //Point these back to M2MConnectionHandler!!!
@@ -99,7 +99,7 @@ static int coap_security_handler_init(coap_security_t *sec){
 
     sec->_is_started = false;
 
-#ifdef COAP_SERVICE_HAS_STRONG_ENTROPY_SOURCE
+#ifdef COAP_SERVICE_PROVIDE_STRONG_ENTROPY_SOURCE
     if( mbedtls_entropy_add_source( &sec->_entropy, entropy_poll, NULL,
                                 128, 1 ) < 0 ){
         return -1;
@@ -606,7 +606,7 @@ int f_recv(void *ctx, unsigned char *buf, size_t len){
     return sec->_receive_cb(sec->_socket_id, buf, len);
 }
 
-#ifdef COAP_SERVICE_HAS_STRONG_ENTROPY_SOURCE
+#ifdef COAP_SERVICE_PROVIDE_STRONG_ENTROPY_SOURCE
 int entropy_poll( void *ctx, unsigned char *output, size_t len,
                            size_t *olen )
 {
