@@ -46,6 +46,11 @@ static NS_LIST_DEFINE(socket_list, internal_socket_t, link);
 
 static void timer_cb(void* param);
 
+static void recv_sckt_msg(void *cb_res);
+#ifdef COAP_SECURITY_AVAILABLE
+static void secure_recv_sckt_msg(void *cb_res);
+#endif
+
 #define TIMER_STATE_CANCELLED -1 /* cancelled */
 #define TIMER_STATE_NO_EXPIRY 0 /* none of the delays is expired */
 #define TIMER_STATE_INT_EXPIRY 1 /* the intermediate delay only is expired */
@@ -194,11 +199,6 @@ static secure_session_t *secure_session_find(internal_socket_t *parent, const ui
     }
     return this;
 }
-
-
-
-static void recv_sckt_msg(void *cb_res);
-static void secure_recv_sckt_msg(void *cb_res);
 
 static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec)
 {
@@ -519,6 +519,7 @@ return_failure:
 
 }
 
+#ifdef COAP_SECURITY_AVAILABLE
 static void secure_recv_sckt_msg(void *cb_res)
 {
     socket_callback_t *sckt_data = cb_res;
@@ -601,6 +602,7 @@ static void secure_recv_sckt_msg(void *cb_res)
         }
     }
 }
+#endif
 
 static void recv_sckt_msg(void *cb_res)
 {
