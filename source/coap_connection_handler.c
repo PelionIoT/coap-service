@@ -300,7 +300,7 @@ static internal_socket_t *int_socket_find(uint16_t port, bool is_secure, bool is
     return this;
 }
 
-static int8_t send_to_real_socket(int8_t socket_id, const ns_address_t *address, const uint8_t source_address[static 16], const void *buffer, uint16_t length)
+static int send_to_real_socket(int8_t socket_id, const ns_address_t *address, const uint8_t source_address[static 16], const void *buffer, uint16_t length)
 {
     ns_iovec_t msg_iov = {
         .iov_base = (void *) buffer,
@@ -360,7 +360,7 @@ static int secure_session_sendto(int8_t socket_id, void *handle, const void *buf
     //For some reason socket_sendto returns 0 in success, while other socket impls return number of bytes sent!!!
     //TODO: check if address_ptr is valid and use that instead if it is
 
-    int8_t ret = send_to_real_socket(sock->socket, &session->remote_host, session->local_address, buf, len);
+    int ret = send_to_real_socket(sock->socket, &session->remote_host, session->local_address, buf, len);
     if (ret < 0) {
         return ret;
     }
@@ -506,6 +506,8 @@ static int read_data(socket_callback_t *sckt_data, internal_socket_t *sock, ns_a
         } else {
             goto return_failure;
         }
+    } else {
+        goto return_failure;
     }
 
     return 0;
