@@ -32,7 +32,7 @@ typedef struct internal_socket_s {
     int16_t data_len;
     uint8_t *data;
 
-    int8_t socket;
+    int8_t socket;  //positive value = socket id, negative value virtual socket id
     bool real_socket;
     uint8_t usage_counter;
     bool is_secure;
@@ -114,6 +114,17 @@ static void secure_session_delete(secure_session_t *this)
     }
 
     return;
+}
+
+static int8_t virtual_socket_id_allocate()
+{
+    int8_t new_virtual_socket_id = -1; // must not overlap with real socket id's
+    ns_list_foreach(internal_socket_t, cur_ptr, &socket_list) {
+        if (cur_ptr->socket <= new_virtual_socket_id) {
+            new_virtual_socket_id = cur_ptr->socket - 1;
+        }
+    }
+    return new_virtual_socket_id;
 }
 
 static secure_session_t *secure_session_create(internal_socket_t *parent, const uint8_t *address_ptr, uint16_t port)
@@ -245,8 +256,8 @@ static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephem
         // Set socket option to receive packet info
         socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_RECVPKTINFO, &(const bool) {1}, sizeof(bool));
 
-    }else{
-        this->socket = -1;
+    } else {
+        this->socket = virtual_socket_id_allocate();
     }
 
     ns_list_add_to_start(&socket_list, this);
