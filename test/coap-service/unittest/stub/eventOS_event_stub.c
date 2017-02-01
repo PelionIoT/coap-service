@@ -9,7 +9,7 @@
 
 eventOs_event_stub_def eventOs_event_stub;
 
-int8_t eventOS_event_send(arm_event_s *event)
+int8_t eventOS_event_send(const arm_event_s *event)
 {
     return eventOs_event_stub.int8_value;
 }
