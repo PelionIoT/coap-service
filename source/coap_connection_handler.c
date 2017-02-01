@@ -97,6 +97,17 @@ static secure_session_t *secure_session_find_by_timer_id(int8_t timer_id)
     return this;
 }
 
+static bool is_secure_session_valid(secure_session_t *session)
+{
+    secure_session_t *this = NULL;
+    ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
+        if (cur_ptr == session) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void secure_session_delete(secure_session_t *this)
 {
     if (this) {
@@ -402,7 +413,8 @@ static int secure_session_recvfrom(int8_t socket_id, unsigned char *buf, size_t 
 static void timer_cb(void *param)
 {
     secure_session_t *sec = param;
-    if( sec ){
+
+    if( sec && is_secure_session_valid(sec)){
         if(sec->timer.fin_ms > sec->timer.int_ms){
             /* Intermediate expiry */
             sec->timer.fin_ms -= sec->timer.int_ms;
