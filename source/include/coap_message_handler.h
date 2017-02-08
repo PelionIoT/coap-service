@@ -21,7 +21,6 @@
 
 #include <inttypes.h>
 #include "sn_coap_header.h"
-#include "sn_nsdl.h"
 #include "ns_list.h"
 
 #define TRANSACTION_LIFETIME 180

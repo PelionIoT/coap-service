@@ -27,6 +27,10 @@ override CFLAGS += -I$(NANOSTACK_DIR)/nanostack/
 NSDLC_DIR := ../nsdl-c
 override CFLAGS += -I$(NSDLC_DIR)/nsdl-c
 
+COAP_DIR := ../libcoap
+override CFLAGS += -I$(COAP_DIR)/libcoap
+
+
 EVENTLOOP_DIR := ../event-loop
 override CFLAGS += -I$(EVENTLOOP_DIR)/nanostack-event-loop/
 
