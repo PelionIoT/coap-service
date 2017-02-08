@@ -15,15 +15,15 @@ INCLUDE_DIRS =\
   ../../../../yotta_modules/nanostack-randlib/mbed-client-randlib/ \
   ../../../../yotta_modules/nanostack-libservice/ \
   ../../../../yotta_modules/nanostack-libservice/mbed-client-libservice/ \
-  ../../../../yotta_modules/mbed-client-c/nsdl-c/ \
-  ../../../../yotta_modules/mbed-client-c/source/libCoap/src/include/ \
+  ../../../../yotta_modules/libcoap/libcoap/ \
+  ../../../../yotta_modules/libcoap/source/include/ \
   ../../../../yotta_modules/sal-stack-nanostack-eventloop/nanostack-event-loop/ \
   ../../../../yotta_modules/sal-stack-nanostack-eventloop/source/ \
   ../../../../yotta_modules/mbed-trace/ \
   ../../../../../nanostack/nanostack/\
   ../../../../../libService/libService/\
-  ../../../../../nsdl-c/nsdl-c/\
-  ../../../../../nsdl-c/source/libCoap/src/include/\
+  ../../../../../libcoap/libcoap/\
+  ../../../../../libcoap/source/include/\
   ../../../../../event-loop/nanostack-event-loop/\
   ../../../../../event-loop/source/ \
   ../../../../../mbedtls/include/ \

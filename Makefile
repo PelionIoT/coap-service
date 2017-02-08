@@ -24,9 +24,6 @@ override CFLAGS += -I$(SERVLIB_DIR)/libService/
 NANOSTACK_DIR := ../nanostack
 override CFLAGS += -I$(NANOSTACK_DIR)/nanostack/
 
-NSDLC_DIR := ../nsdl-c
-override CFLAGS += -I$(NSDLC_DIR)/nsdl-c
-
 COAP_DIR := ../libcoap
 override CFLAGS += -I$(COAP_DIR)/libcoap
 
