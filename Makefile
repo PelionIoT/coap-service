@@ -24,8 +24,8 @@ override CFLAGS += -I$(SERVLIB_DIR)/libService/
 NANOSTACK_DIR := ../nanostack
 override CFLAGS += -I$(NANOSTACK_DIR)/nanostack/
 
-COAP_DIR := ../libcoap
-override CFLAGS += -I$(COAP_DIR)/libcoap
+COAP_DIR := ../mbed-coap
+override CFLAGS += -I$(COAP_DIR)/
 
 
 EVENTLOOP_DIR := ../event-loop
