@@ -280,8 +280,7 @@ static int get_passwd_cb(int8_t socket_id, uint8_t address[static 16], uint16_t 
 int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_t service_options,
                                  coap_service_security_start_cb *start_ptr, coap_service_security_done_cb *coap_security_done_cb)
 {
-    (void) interface_id;
-
+    int8_t socket_interface_selection = -1;
     coap_service_t *this = ns_dyn_mem_alloc(sizeof(coap_service_t));
     if (!this) {
         return -1;
@@ -293,6 +292,7 @@ int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_
     while (service_find(id) && id < 127) {
         id++;
     }
+    this->interface_id = interface_id;
     this->service_id = id;
     this->service_options = service_options;
 
@@ -310,10 +310,16 @@ int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_
         return -1;
     }
 
-    if (0 > coap_connection_handler_open_connection(this->conn_handler, listen_port, ((this->service_options & COAP_SERVICE_OPTIONS_EPHEMERAL_PORT) == COAP_SERVICE_OPTIONS_EPHEMERAL_PORT),
-                                              ((this->service_options & COAP_SERVICE_OPTIONS_SECURE) == COAP_SERVICE_OPTIONS_SECURE),
-                                              ((this->service_options & COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET) != COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET),
-                                              ((this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS) == COAP_SERVICE_OPTIONS_SECURE_BYPASS))){
+    if (this->service_options & COAP_SERVICE_OPTIONS_SELECT_SOCKET_IF) {
+        socket_interface_selection = this->interface_id;
+    }
+
+    if (0 > coap_connection_handler_open_connection(this->conn_handler, listen_port,
+            ((this->service_options & COAP_SERVICE_OPTIONS_EPHEMERAL_PORT) == COAP_SERVICE_OPTIONS_EPHEMERAL_PORT),
+            ((this->service_options & COAP_SERVICE_OPTIONS_SECURE) == COAP_SERVICE_OPTIONS_SECURE),
+            ((this->service_options & COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET) != COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET),
+            ((this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS) == COAP_SERVICE_OPTIONS_SECURE_BYPASS),
+              socket_interface_selection)) {
         ns_dyn_mem_free(this->conn_handler);
         ns_dyn_mem_free(this);
         return -1;

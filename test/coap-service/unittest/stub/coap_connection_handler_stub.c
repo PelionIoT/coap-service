@@ -41,7 +41,7 @@ void connection_handler_close_secure_connection( coap_conn_handler_t *handler, u
 
 }
 
-int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool is_real_socket, bool bypassSec)
+int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool is_real_socket, bool bypassSec, int8_t socket_interface_selection)
 {
     return thread_conn_handler_stub.int_value;
 }

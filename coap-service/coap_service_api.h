@@ -45,6 +45,8 @@ extern "C" {
 #define COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET     0x01
 #define COAP_SERVICE_OPTIONS_SECURE 	        0x02
 #define COAP_SERVICE_OPTIONS_EPHEMERAL_PORT     0x04
+/** Coap interface selected as socket interface */
+#define COAP_SERVICE_OPTIONS_SELECT_SOCKET_IF   0x08
 /** Link-layer security bypass option is set*/
 #define COAP_SERVICE_OPTIONS_SECURE_BYPASS      0x80
 
