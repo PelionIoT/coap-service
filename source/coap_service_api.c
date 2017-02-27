@@ -315,11 +315,11 @@ int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_
     }
 
     if (0 > coap_connection_handler_open_connection(this->conn_handler, listen_port,
-            ((this->service_options & COAP_SERVICE_OPTIONS_EPHEMERAL_PORT) == COAP_SERVICE_OPTIONS_EPHEMERAL_PORT),
-            ((this->service_options & COAP_SERVICE_OPTIONS_SECURE) == COAP_SERVICE_OPTIONS_SECURE),
-            ((this->service_options & COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET) != COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET),
-            ((this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS) == COAP_SERVICE_OPTIONS_SECURE_BYPASS),
-              socket_interface_selection)) {
+            (this->service_options & COAP_SERVICE_OPTIONS_EPHEMERAL_PORT),
+            (this->service_options & COAP_SERVICE_OPTIONS_SECURE),
+            !(this->service_options & COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET),
+            (this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS),
+             socket_interface_selection)) {
         ns_dyn_mem_free(this->conn_handler);
         ns_dyn_mem_free(this);
         return -1;
