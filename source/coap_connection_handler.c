@@ -222,7 +222,7 @@ static secure_session_t *secure_session_find(internal_socket_t *parent, const ui
     return this;
 }
 
-static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec)
+static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec, int8_t socket_interface_selection)
 {
     internal_socket_t *this = ns_dyn_mem_alloc(sizeof(internal_socket_t));
     if (!this) {
@@ -266,7 +266,10 @@ static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephem
 
         // Set socket option to receive packet info
         socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_RECVPKTINFO, &(const bool) {1}, sizeof(bool));
-
+        if (socket_interface_selection != -1) {
+            // Select socket interface if selection requested
+            socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_INTERFACE_SELECT, &socket_interface_selection, sizeof(int8_t));
+        }
     } else {
         this->socket = virtual_socket_id_allocate();
     }
@@ -795,7 +798,7 @@ void connection_handler_close_secure_connection( coap_conn_handler_t *handler, u
     }
 }
 
-int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool is_real_socket, bool bypassSec)
+int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool is_real_socket, bool bypassSec, int8_t socket_interface_selection)
 {
     if (!handler) {
         return -1;
@@ -810,7 +813,7 @@ int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16
 
     internal_socket_t *current = !use_ephemeral_port?int_socket_find(listen_port, is_secure, is_real_socket, bypassSec):NULL;
     if (!current) {
-        handler->socket = int_socket_create(listen_port, use_ephemeral_port, is_secure, is_real_socket, bypassSec);
+        handler->socket = int_socket_create(listen_port, use_ephemeral_port, is_secure, is_real_socket, bypassSec, socket_interface_selection);
         if (!handler->socket) {
             return -1;
         }

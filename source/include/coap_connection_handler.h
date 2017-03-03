@@ -55,7 +55,7 @@ void connection_handler_destroy( coap_conn_handler_t *handler );
 
 void connection_handler_close_secure_connection( coap_conn_handler_t *handler, uint8_t destination_addr_ptr[static 16], uint16_t port );
 
-int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec);
+int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec, int8_t socket_interface_selection);
 
 //If returns -2, it means security was started and data was not send
 int coap_connection_handler_send_data(coap_conn_handler_t *handler, const ns_address_t *dest_addr, const uint8_t src_address[static 16], uint8_t *data_ptr, uint16_t data_len, bool bypass_link_sec);
