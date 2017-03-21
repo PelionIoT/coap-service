@@ -38,6 +38,8 @@ bool test_coap_service_unregister_uri();
 
 bool test_coap_service_request_send();
 
+bool test_coap_service_request_delete();
+
 bool test_coap_service_response_send();
 
 bool test_coap_callbacks();

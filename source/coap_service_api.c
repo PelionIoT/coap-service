@@ -465,6 +465,11 @@ int8_t coap_service_response_send(int8_t service_id, uint8_t options, sn_coap_hd
     return coap_message_handler_response_send(coap_service_handle, service_id, options, request_ptr, message_code, content_type, payload_ptr, payload_len);
 }
 
+int8_t coap_service_request_delete(int8_t service_id, uint16_t msg_id)
+{
+    return coap_message_handler_request_delete(coap_service_handle, service_id, msg_id);
+}
+
 int8_t coap_service_set_handshake_timeout(int8_t service_id, uint32_t min, uint32_t max)
 {
     coap_service_t *this = service_find(service_id);
