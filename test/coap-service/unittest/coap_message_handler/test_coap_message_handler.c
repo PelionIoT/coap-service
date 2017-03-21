@@ -229,6 +229,39 @@ bool test_coap_message_handler_request_send()
     return true;
 }
 
+bool test_coap_message_handler_request_delete()
+{
+    retCounter = 1;
+    sn_coap_protocol_stub.expectedCoap = (struct coap_s*)malloc(sizeof(struct coap_s));
+    memset(sn_coap_protocol_stub.expectedCoap, 0, sizeof(struct coap_s));
+    coap_msg_handler_t *handle = coap_message_handler_init(&own_alloc, &own_free, &coap_tx_function);
+
+    uint8_t buf[16];
+    memset(&buf, 1, 16);
+    char uri[3];
+    uri[0] = "r";
+    uri[1] = "s";
+    uri[2] = "\0";
+    if( 0 == coap_message_handler_request_delete(NULL, 1, 1))
+        return false;
+
+    if( 0 == coap_message_handler_request_delete(handle, 1, 1))
+        return false;
+
+    sn_coap_builder_stub.expectedUint16 = 1;
+    nsdynmemlib_stub.returnCounter = 3;
+    if( 2 != coap_message_handler_request_send(handle, 3, 0, buf, 24, 1, 2, &uri, 4, NULL, 0, &resp_recv))
+        return false;
+
+    if( 0 != coap_message_handler_request_delete(handle, 1, 2))
+        return false;
+
+    free(sn_coap_protocol_stub.expectedCoap);
+    sn_coap_protocol_stub.expectedCoap = NULL;
+    coap_message_handler_destroy(handle);
+    return true;
+}
+
 bool test_coap_message_handler_response_send()
 {
     if( -1 != coap_message_handler_response_send(NULL, 2, 0, NULL, 1,3,NULL, 0))

@@ -60,6 +60,11 @@ int8_t coap_message_handler_response_send(coap_msg_handler_t *handle, int8_t ser
     return coap_message_handler_stub.int8_value;
 }
 
+int8_t coap_message_handler_request_delete(coap_msg_handler_t *handle, int8_t service_id, uint16_t msg_id)
+{
+    return 0;
+}
+
 int8_t coap_message_handler_exec(coap_msg_handler_t *handle, uint32_t current_time)
 {
     return coap_message_handler_stub.int8_value;

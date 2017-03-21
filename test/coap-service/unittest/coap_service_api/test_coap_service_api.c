@@ -215,6 +215,13 @@ bool test_coap_service_request_send()
     return true;
 }
 
+bool test_coap_service_request_delete()
+{
+    if( 0 != coap_service_request_delete(NULL,0))
+        return false;
+    return true;
+}
+
 bool test_coap_service_response_send()
 {
     uint8_t buf[16];
