@@ -42,6 +42,9 @@ typedef struct internal_socket_s {
     ns_list_link_t link;
 } internal_socket_t;
 
+const uint8_t COAP_MULTICAST_ADDR_LINK_LOCAL[16] = { 0xff, 0x02, [15] = 0xfd }; // ff02::fd, COAP link local multicast (rfc7390)
+const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16] = { 0xff, 0x05, [15] = 0xfd }; // ff05::fd, COAP site local multicast (rfc7390)
+
 static NS_LIST_DEFINE(socket_list, internal_socket_t, link);
 
 static void timer_cb(void* param);
@@ -223,7 +226,9 @@ static secure_session_t *secure_session_find(internal_socket_t *parent, const ui
 
 static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec, int8_t socket_interface_selection)
 {
+    ns_ipv6_mreq_t ns_ipv6_mreq;
     internal_socket_t *this = ns_dyn_mem_alloc(sizeof(internal_socket_t));
+
     if (!this) {
         return NULL;
     }
@@ -265,10 +270,18 @@ static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephem
 
         // Set socket option to receive packet info
         socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_RECVPKTINFO, &(const bool) {1}, sizeof(bool));
-        if (socket_interface_selection != -1) {
-            // Select socket interface if selection requested
+        if (socket_interface_selection > 0) {
+            // Interface selection requested as socket_interface_selection set
             socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_INTERFACE_SELECT, &socket_interface_selection, sizeof(int8_t));
         }
+
+        // Join COAP multicast group(s)
+        ns_ipv6_mreq.ipv6mr_interface = socket_interface_selection; // It is OK to use 0 or real interface id here
+        memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_SITE_LOCAL, 16);
+        socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_JOIN_GROUP, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+
+        memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_LINK_LOCAL, 16);
+        socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_JOIN_GROUP, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
     } else {
         this->socket = virtual_socket_id_allocate();
     }
