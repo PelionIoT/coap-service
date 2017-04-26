@@ -42,8 +42,9 @@ typedef struct internal_socket_s {
     ns_list_link_t link;
 } internal_socket_t;
 
-const uint8_t COAP_MULTICAST_ADDR_LINK_LOCAL[16] = { 0xff, 0x02, [15] = 0xfd }; // ff02::fd, COAP link local multicast (rfc7390)
-const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16] = { 0xff, 0x05, [15] = 0xfd }; // ff05::fd, COAP site local multicast (rfc7390)
+const uint8_t COAP_MULTICAST_ADDR_LINK_LOCAL[16] = { 0xff, 0x02, [15] = 0xfd }; // ff02::fd, COAP link-local multicast (rfc7390)
+const uint8_t COAP_MULTICAST_ADDR_ADMIN_LOCAL[16] = { 0xff, 0x03, [15] = 0xfd }; // ff02::fd, COAP admin-local multicast (rfc7390)
+const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16] = { 0xff, 0x05, [15] = 0xfd }; // ff05::fd, COAP site-local multicast (rfc7390)
 
 static NS_LIST_DEFINE(socket_list, internal_socket_t, link);
 
@@ -272,15 +273,19 @@ static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephem
         socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_RECVPKTINFO, &(const bool) {1}, sizeof(bool));
         if (socket_interface_selection > 0) {
             // Interface selection requested as socket_interface_selection set
-            socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_INTERFACE_SELECT, &socket_interface_selection, sizeof(int8_t));
+            socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_INTERFACE_SELECT, &socket_interface_selection, sizeof(socket_interface_selection));
         }
 
         // Join COAP multicast group(s)
         ns_ipv6_mreq.ipv6mr_interface = socket_interface_selection; // It is OK to use 0 or real interface id here
-        memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_SITE_LOCAL, 16);
-        socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_JOIN_GROUP, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
 
         memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_LINK_LOCAL, 16);
+        socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_JOIN_GROUP, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+
+        memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_ADMIN_LOCAL, 16);
+        socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_JOIN_GROUP, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+
+        memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_SITE_LOCAL, 16);
         socket_setsockopt(this->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_JOIN_GROUP, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
     } else {
         this->socket = virtual_socket_id_allocate();
