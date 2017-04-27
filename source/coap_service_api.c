@@ -280,7 +280,7 @@ static int get_passwd_cb(int8_t socket_id, uint8_t address[static 16], uint16_t 
 int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_t service_options,
                                  coap_service_security_start_cb *start_ptr, coap_service_security_done_cb *coap_security_done_cb)
 {
-    int8_t socket_interface_selection = -1;
+    int8_t socket_interface_selection = 0; // zero is illegal interface ID
     coap_service_t *this = ns_dyn_mem_alloc(sizeof(coap_service_t));
     if (!this) {
         return -1;

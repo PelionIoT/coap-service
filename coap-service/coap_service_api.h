@@ -58,6 +58,10 @@ extern "C" {
 #define COAP_REQUEST_OPTIONS_MULTICAST          0x04 //!< indicates that CoAP library support multicasting
 #define COAP_REQUEST_OPTIONS_SECURE_BYPASS      0x08
 
+extern const uint8_t COAP_MULTICAST_ADDR_LINK_LOCAL[16]; //!< ff02::fd, COAP link local multicast address
+extern const uint8_t COAP_MULTICAST_ADDR_ADMIN_LOCAL[16]; //!< ff03::fd, COAP admin-local multicast address
+extern const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16]; //!> ff05::fd, COAP site-local multicast address
+
 /**
  * \brief Service message response receive callback.
  *
