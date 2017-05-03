@@ -99,6 +99,16 @@ static coap_service_t *service_find_by_uri(uint8_t socket_id, uint8_t *uri_ptr, 
     return NULL;
 }
 
+static int coap_service_multicast_joiner_count(void)
+{
+    int mc_count = 0;
+    ns_list_foreach(coap_service_t, cur_ptr, &instance_list) {
+        if (cur_ptr->conn_handler && cur_ptr->conn_handler->registered_to_multicast) {
+            mc_count ++;
+        }
+    }
+    return mc_count;
+}
 
 /**
  *  Coap handling functions
@@ -280,8 +290,8 @@ static int get_passwd_cb(int8_t socket_id, uint8_t address[static 16], uint16_t 
 int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_t service_options,
                                  coap_service_security_start_cb *start_ptr, coap_service_security_done_cb *coap_security_done_cb)
 {
-    int8_t socket_interface_selection = 0; // zero is illegal interface ID
     coap_service_t *this = ns_dyn_mem_alloc(sizeof(coap_service_t));
+
     if (!this) {
         return -1;
     }
@@ -310,16 +320,18 @@ int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_
         return -1;
     }
 
+    this->conn_handler->socket_interface_selection = 0; // zero is illegal interface ID
     if (this->service_options & COAP_SERVICE_OPTIONS_SELECT_SOCKET_IF) {
-        socket_interface_selection = this->interface_id;
+        this->conn_handler->socket_interface_selection = this->interface_id;
     }
+
+    this->conn_handler->registered_to_multicast = this->service_options & COAP_SERVICE_OPTIONS_MULTICAST_JOIN;
 
     if (0 > coap_connection_handler_open_connection(this->conn_handler, listen_port,
             (this->service_options & COAP_SERVICE_OPTIONS_EPHEMERAL_PORT),
             (this->service_options & COAP_SERVICE_OPTIONS_SECURE),
             !(this->service_options & COAP_SERVICE_OPTIONS_VIRTUAL_SOCKET),
-            (this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS),
-             socket_interface_selection)) {
+            (this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS))) {
         ns_dyn_mem_free(this->conn_handler);
         ns_dyn_mem_free(this);
         return -1;
@@ -346,7 +358,12 @@ void coap_service_delete(int8_t service_id)
     }
 
     if (this->conn_handler){
-        connection_handler_destroy(this->conn_handler);
+        bool leave_multicast_group = false;
+        if (coap_service_multicast_joiner_count() == 1) {
+            // This is the last handler joined to multicast group
+            leave_multicast_group = true;
+        }
+        connection_handler_destroy(this->conn_handler, leave_multicast_group);
     }
 
     //TODO clear all transactions
