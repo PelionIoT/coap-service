@@ -99,15 +99,26 @@ static coap_service_t *service_find_by_uri(uint8_t socket_id, uint8_t *uri_ptr, 
     return NULL;
 }
 
-static int coap_service_multicast_joiner_count(void)
+static bool coap_service_can_leave_multicast_group(coap_conn_handler_t *conn_handler)
 {
     int mc_count = 0;
+    bool current_handler_joined_to_mc_group = false;
+
     ns_list_foreach(coap_service_t, cur_ptr, &instance_list) {
         if (cur_ptr->conn_handler && cur_ptr->conn_handler->registered_to_multicast) {
+            if (conn_handler == cur_ptr->conn_handler) {
+                current_handler_joined_to_mc_group = true;
+            }
             mc_count ++;
         }
     }
-    return mc_count;
+
+    if (mc_count == 1 && current_handler_joined_to_mc_group) {
+        // current handler is the only one joined to multicast group
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -359,7 +370,7 @@ void coap_service_delete(int8_t service_id)
 
     if (this->conn_handler){
         bool leave_multicast_group = false;
-        if (coap_service_multicast_joiner_count() == 1) {
+        if (coap_service_can_leave_multicast_group(this->conn_handler)) {
             // This is the last handler joined to multicast group
             leave_multicast_group = true;
         }

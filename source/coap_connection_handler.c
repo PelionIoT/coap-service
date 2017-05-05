@@ -228,18 +228,23 @@ static secure_session_t *secure_session_find(internal_socket_t *parent, const ui
 static void coap_multicast_group_join_or_leave(int8_t socket_id, uint8_t opt_name, int8_t interface_id)
 {
     ns_ipv6_mreq_t ns_ipv6_mreq;
+    int8_t ret_val;
 
     // Join or leave COAP multicast groups
     ns_ipv6_mreq.ipv6mr_interface = interface_id;
 
     memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_LINK_LOCAL, 16);
-    socket_setsockopt(socket_id, SOCKET_IPPROTO_IPV6, opt_name, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+    ret_val = socket_setsockopt(socket_id, SOCKET_IPPROTO_IPV6, opt_name, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
 
     memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_ADMIN_LOCAL, 16);
-    socket_setsockopt(socket_id, SOCKET_IPPROTO_IPV6, opt_name, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+    ret_val |= socket_setsockopt(socket_id, SOCKET_IPPROTO_IPV6, opt_name, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
 
     memcpy(ns_ipv6_mreq.ipv6mr_multiaddr, COAP_MULTICAST_ADDR_SITE_LOCAL, 16);
-    socket_setsockopt(socket_id, SOCKET_IPPROTO_IPV6, opt_name, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+    ret_val |= socket_setsockopt(socket_id, SOCKET_IPPROTO_IPV6, opt_name, &ns_ipv6_mreq, sizeof(ns_ipv6_mreq));
+
+    if (ret_val) {
+        tr_error("Multicast group access failed, err=%d, name=%d", ret_val, opt_name);
+    }
 }
 
 static internal_socket_t *int_socket_create(uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec, int8_t socket_interface_selection, bool multicast_registration)
