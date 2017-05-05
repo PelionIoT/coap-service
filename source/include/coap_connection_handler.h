@@ -44,6 +44,8 @@ typedef struct coap_conn_handler_s{
     send_to_socket_cb *_send_cb;
     get_pw_cb *_get_password_cb;
     security_done_cb *_security_done_cb;
+    int8_t socket_interface_selection;
+    bool registered_to_multicast;
 } coap_conn_handler_t;
 
 coap_conn_handler_t *connection_handler_create(receive_from_socket_cb *recv_from_cb,
@@ -51,11 +53,11 @@ coap_conn_handler_t *connection_handler_create(receive_from_socket_cb *recv_from
                                                  get_pw_cb *pw_cb,
                                                  security_done_cb *done_cb);
 
-void connection_handler_destroy( coap_conn_handler_t *handler );
+void connection_handler_destroy( coap_conn_handler_t *handler, bool multicast_group_leave);
 
 void connection_handler_close_secure_connection( coap_conn_handler_t *handler, uint8_t destination_addr_ptr[static 16], uint16_t port );
 
-int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec, int8_t socket_interface_selection);
+int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec);
 
 //If returns -2, it means security was started and data was not send
 int coap_connection_handler_send_data(coap_conn_handler_t *handler, const ns_address_t *dest_addr, const uint8_t src_address[static 16], uint8_t *data_ptr, uint16_t data_len, bool bypass_link_sec);
