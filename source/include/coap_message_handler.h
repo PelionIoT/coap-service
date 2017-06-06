@@ -24,6 +24,8 @@
 #include "ns_list.h"
 
 #define TRANSACTION_LIFETIME 180
+/* Default value for CoAP duplicate message buffer (0 = disabled) */
+#define DUPLICATE_MESSAGE_BUFFER_SIZE 0
 
 /**
  * \brief Service message response receive callback.

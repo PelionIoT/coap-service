@@ -282,6 +282,7 @@ extern int8_t coap_service_response_send(int8_t service_id, uint8_t options, sn_
  *-         0              For success
  */
 extern int8_t coap_service_request_delete(int8_t service_id, uint16_t msg_id);
+
 /**
  * \brief Set DTLS handshake timeout values
  *
@@ -295,6 +296,19 @@ extern int8_t coap_service_request_delete(int8_t service_id, uint16_t msg_id);
  *-         0              For success
  */
 extern int8_t coap_service_set_handshake_timeout(int8_t service_id, uint32_t min, uint32_t max);
+
+/**
+ * \brief Set CoAP duplication message buffer size
+ *
+ * Configures the CoAP duplication message buffer size.
+ *
+ * \param service_id       Id number of the current service.
+ * \param size             Buffer size (messages)
+ *
+ * \return -1              For failure
+ *-         0              For success
+ */
+extern int8_t coap_service_set_duplicate_message_buffer(int8_t service_id, uint8_t size);
 #ifdef __cplusplus
 }
 #endif

@@ -21,6 +21,7 @@
 #include "net_interface.h"
 #include "coap_service_api_internal.h"
 #include "coap_message_handler.h"
+#include "mbed-coap/sn_coap_protocol.h"
 
 static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr);
 
@@ -506,6 +507,17 @@ int8_t coap_service_set_handshake_timeout(int8_t service_id, uint32_t min, uint3
     }
 
     return coap_connection_handler_set_timeout(this->conn_handler, min, max);
+}
+
+int8_t coap_service_set_duplicate_message_buffer(int8_t service_id, uint8_t size)
+{
+    (void) service_id;
+
+    if (!coap_service_handle) {
+        return -1;
+    }
+
+    return sn_coap_protocol_set_duplicate_buffer_size(coap_service_handle->coap, size);
 }
 
 uint32_t coap_service_get_internal_timer_ticks(void)
