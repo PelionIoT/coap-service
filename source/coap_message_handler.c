@@ -180,6 +180,10 @@ coap_msg_handler_t *coap_message_handler_init(void *(*used_malloc_func_ptr)(uint
         used_free_func_ptr(handle);
         return NULL;
     }
+
+    /* Disable CoAP protocol duplicate message detection */
+    sn_coap_protocol_set_duplicate_buffer_size(handle->coap, 0);
+
     return handle;
 }
 
