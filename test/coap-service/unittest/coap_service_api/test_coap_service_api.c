@@ -423,3 +423,69 @@ bool test_conn_handler_callbacks()
 
     return true;
 }
+
+bool test_duplicate_buffer_set()
+{
+    if (-1 != coap_service_set_duplicate_message_buffer(1, 1)) {
+        return false;
+    }
+
+    thread_conn_handler_stub.handler_obj = (coap_conn_handler_t*)malloc(sizeof(coap_conn_handler_t));
+    memset(thread_conn_handler_stub.handler_obj, 0, sizeof(coap_conn_handler_t));
+
+    coap_message_handler_stub.coap_ptr = (coap_msg_handler_t *)malloc(sizeof(coap_msg_handler_t));
+    memset(coap_message_handler_stub.coap_ptr, 0, sizeof(coap_msg_handler_t));
+
+    nsdynmemlib_stub.returnCounter = 1;
+
+    if (1 != coap_service_initialize(1, 2, 0, NULL, NULL)) {
+        return false;
+    }
+
+    if (0 != coap_service_set_duplicate_message_buffer(1, 1)) {
+        return false;
+    }
+
+    coap_service_delete(1);
+
+    free( coap_message_handler_stub.coap_ptr );
+    coap_message_handler_stub.coap_ptr = NULL;
+
+    free( thread_conn_handler_stub.handler_obj );
+    thread_conn_handler_stub.handler_obj = NULL;
+
+    return true;
+}
+
+bool test_handshake_timeout_set()
+{
+    if (-1 != coap_service_set_handshake_timeout(1, 1, 2)) {
+        return false;
+    }
+
+    thread_conn_handler_stub.handler_obj = (coap_conn_handler_t*)malloc(sizeof(coap_conn_handler_t));
+    memset(thread_conn_handler_stub.handler_obj, 0, sizeof(coap_conn_handler_t));
+
+    coap_message_handler_stub.coap_ptr = (coap_msg_handler_t *)malloc(sizeof(coap_msg_handler_t));
+    memset(coap_message_handler_stub.coap_ptr, 0, sizeof(coap_msg_handler_t));
+
+    nsdynmemlib_stub.returnCounter = 1;
+
+    if (1 != coap_service_initialize(1, 2, 0, NULL, NULL)) {
+        return false;
+    }
+
+    if (0 != coap_service_set_handshake_timeout(1, 1, 2)) {
+        return false;
+    }
+
+    coap_service_delete(1);
+
+    free( coap_message_handler_stub.coap_ptr );
+    coap_message_handler_stub.coap_ptr = NULL;
+
+    free( thread_conn_handler_stub.handler_obj );
+    thread_conn_handler_stub.handler_obj = NULL;
+
+    return true;
+}
