@@ -31,11 +31,6 @@ typedef struct {
 
 extern nsdynmemlib_stub_data_t nsdynmemlib_stub;
 
-
-void *ns_dyn_mem_alloc(int16_t alloc_size);
-void *ns_dyn_mem_temporary_alloc(int16_t alloc_size);
-void ns_dyn_mem_free(void *block);
-
 #ifdef __cplusplus
 }
 #endif
