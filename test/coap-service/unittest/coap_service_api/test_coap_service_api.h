@@ -48,6 +48,10 @@ bool test_eventOS_callbacks();
 
 bool test_conn_handler_callbacks();
 
+bool test_duplicate_buffer_set();
+
+bool test_handshake_timeout_set();
+
 
 #ifdef __cplusplus
 }

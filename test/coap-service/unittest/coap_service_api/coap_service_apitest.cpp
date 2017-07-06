@@ -75,3 +75,12 @@ TEST(coap_service_api, test_conn_handler_callbacks)
     CHECK(test_conn_handler_callbacks());
 }
 
+TEST(coap_service_api, test_duplicate_buffer_set)
+{
+    CHECK(test_duplicate_buffer_set());
+}
+
+TEST(coap_service_api, test_handshake_timeout_set)
+{
+    CHECK(test_handshake_timeout_set());
+}

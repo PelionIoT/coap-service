@@ -387,6 +387,12 @@ void coap_service_delete(int8_t service_id)
 
     ns_list_remove(&instance_list, this);
     ns_dyn_mem_free(this);
+
+    if (!ns_list_count(&instance_list)) {
+        coap_message_handler_destroy(coap_service_handle);
+        coap_service_handle = NULL;
+    }
+
     return;
 }
 
