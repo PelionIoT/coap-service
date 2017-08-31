@@ -17,7 +17,7 @@ int sec_done_cb(int8_t service_id, uint8_t address[static 16], uint8_t keyblock[
 
 int sec_start_cb(int8_t service_id, uint8_t address[static 16], uint16_t port, uint8_t* pw, uint8_t *pw_len)
 {
-    return 2;
+    return 0;
 }
 
 int request_recv_cb(int8_t service_id, uint8_t source_address[static 16], uint16_t source_port, sn_coap_hdr_s *request_ptr)
@@ -389,11 +389,15 @@ bool test_conn_handler_callbacks()
     }
 
     if(thread_conn_handler_stub.get_passwd_cb){
+        coap_security_keys_t security_ptr;
+        memset(&security_ptr, 0, sizeof(coap_security_keys_t));
+        nsdynmemlib_stub.returnCounter = 1;
         thread_conn_handler_stub.bool_value = true;
-        if( 2 != thread_conn_handler_stub.get_passwd_cb(1, buf, 12, NULL, 0))
+        if( 0 != thread_conn_handler_stub.get_passwd_cb(1, buf, 12, &security_ptr))
             return false;
+        free(security_ptr._key);
         thread_conn_handler_stub.bool_value = false;
-        if( -1 != thread_conn_handler_stub.get_passwd_cb(1, buf, 12, NULL, 0))
+        if( -1 != thread_conn_handler_stub.get_passwd_cb(1, buf, 12, NULL))
             return false;
     }
 
