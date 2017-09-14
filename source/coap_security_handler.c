@@ -282,12 +282,8 @@ static int coap_security_handler_configure_keys (coap_security_t *sec, coap_secu
     switch( sec->_conn_mode ){
         case CERTIFICATE:{
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-        if(  mbedtls_x509_crt_parse( &sec->_cacert, keys._ca_cert,
-                                     keys._ca_cert_len ) < 0 ){
-            break;
-        }
-        if( mbedtls_x509_crt_parse( &sec->_owncert, keys._own_cert,
-                                    keys._own_cert_len ) < 0 ){
+        if( keys._cert && mbedtls_x509_crt_parse( &sec->_owncert, keys._cert,
+                                    keys._cert_len ) < 0 ){
             break;
         }
         if( mbedtls_pk_parse_key(&sec->_pkey, keys._priv_key, keys._priv_key_len, NULL, 0) < 0){
@@ -302,7 +298,7 @@ static int coap_security_handler_configure_keys (coap_security_t *sec, coap_secu
             //TODO: add server certi
         }
         //TODO: use MBEDTLS_SSL_VERIFY_REQUIRED instead of optional
-        mbedtls_ssl_conf_authmode( &sec->_conf, MBEDTLS_SSL_VERIFY_OPTIONAL );
+        mbedtls_ssl_conf_authmode( &sec->_conf, MBEDTLS_SSL_VERIFY_NONE );
         mbedtls_ssl_conf_ca_chain( &sec->_conf, &sec->_cacert, NULL );
         ret = 0;
 #endif
@@ -310,7 +306,7 @@ static int coap_security_handler_configure_keys (coap_security_t *sec, coap_secu
         }
         case PSK: {
 #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
-        if( 0 != mbedtls_ssl_conf_psk(&sec->_conf, keys._priv_key, keys._priv_key_len, keys._own_cert, keys._own_cert_len) ){
+        if( 0 != mbedtls_ssl_conf_psk(&sec->_conf, keys._priv_key, keys._priv_key_len, keys._cert, keys._cert_len) ){
             break;
         }
         mbedtls_ssl_conf_ciphersuites(&sec->_conf, PSK_SUITES);
@@ -395,6 +391,7 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
 #endif
 
     if (coap_security_handler_configure_keys(sec, keys, is_server) != 0) {
+        tr_debug("security credential configure failed");
         return -1;
     }
 

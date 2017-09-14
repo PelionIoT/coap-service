@@ -433,7 +433,7 @@ bool test_conn_handler_callbacks()
 bool test_certificate_set()
 {
     /* Service not found, return failure */
-    if (-1 != coap_service_certificate_set(1, NULL, 0, NULL, 0, NULL, 0)) {
+    if (-1 != coap_service_certificate_set(1, NULL, 0, NULL, 0)) {
         return false;
     }
 
@@ -446,13 +446,13 @@ bool test_certificate_set()
         return false;
 
     /* Allocation fails */
-    if (-1 != coap_service_certificate_set(1, NULL, 0, NULL, 0, NULL, 0)) {
+    if (-1 != coap_service_certificate_set(1, NULL, 0, NULL, 0)) {
         return false;
     }
 
     /* All OK */
     nsdynmemlib_stub.returnCounter = 1;
-    if (0 != coap_service_certificate_set(1, NULL, 0, NULL, 0, NULL, 0)) {
+    if (0 != coap_service_certificate_set(1, NULL, 0, NULL, 0)) {
         return false;
     }
 

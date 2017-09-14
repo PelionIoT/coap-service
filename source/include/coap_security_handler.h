@@ -60,10 +60,8 @@ typedef enum {
 typedef struct {
     SecureConnectionMode mode;
     /* Certificate pointers, not owned */
-    const unsigned char *_ca_cert;
-    uint16_t _ca_cert_len;
-    const unsigned char *_own_cert;
-    uint16_t _own_cert_len;
+    const unsigned char *_cert;
+    uint16_t _cert_len;
     const unsigned char *_priv_key;
     uint8_t _priv_key_len;
     /* Secure key pointer, owned */
