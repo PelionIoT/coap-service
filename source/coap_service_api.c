@@ -554,7 +554,7 @@ uint16_t coap_service_id_find_by_socket(int8_t socket_id)
     return this ? this->service_id:0;
 }
 
-int8_t coap_service_certificate_set(int8_t service_id, const unsigned char *root_cert, uint16_t root_cert_len, const unsigned char *own_cert, uint16_t own_cert_len, const unsigned char *priv_key, uint8_t priv_key_len)
+int8_t coap_service_certificate_set(int8_t service_id, const unsigned char *cert, uint16_t cert_len, const unsigned char *priv_key, uint8_t priv_key_len)
 {
     coap_service_t *this = service_find(service_id);
     if (!this) {
@@ -571,11 +571,8 @@ int8_t coap_service_certificate_set(int8_t service_id, const unsigned char *root
 
     memset(this->conn_handler->security_keys, 0, sizeof(coap_security_keys_t));
 
-    this->conn_handler->security_keys->_ca_cert = root_cert;
-    this->conn_handler->security_keys->_ca_cert_len = root_cert_len;
-
-    this->conn_handler->security_keys->_own_cert = own_cert;
-    this->conn_handler->security_keys->_own_cert_len = own_cert_len;
+    this->conn_handler->security_keys->_cert = cert;
+    this->conn_handler->security_keys->_cert_len = cert_len;
 
     this->conn_handler->security_keys->_priv_key = priv_key;
     this->conn_handler->security_keys->_priv_key_len = priv_key_len;
