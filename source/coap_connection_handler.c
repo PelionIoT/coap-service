@@ -161,7 +161,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
             tr_debug("DEPK: MAX amount of sessions reached");
             return NULL;
         }
-        tr_debug("DEPK: Session to be removed: port %d address %s", cur_ptr->remote_host.identifier, trace_array(cur_ptr->remote_host.address,16));
+        tr_debug("DEPK: Session to be removed: port %d address %s", to_be_removed->remote_host.identifier, trace_array(to_be_removed->remote_host.address,16));
         secure_session_delete(to_be_removed);
     }
 
