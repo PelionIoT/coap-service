@@ -146,7 +146,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
     if(!address_ptr){
         return NULL;
     }
-
+    tr_debug("DEPK: trying to create secure session in port %d, for address %s", port,trace_array(address_ptr,16));
     if(MAX_SECURE_SESSION_COUNT <= ns_list_count(&secure_session_list)){
         // Seek & destroy oldest session where close notify have been sent
         secure_session_t *to_be_removed = NULL;
@@ -158,14 +158,16 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
             }
         }
         if(!to_be_removed){
+            tr_debug("DEPK: MAX amount of sessions reached");
             return NULL;
         }
-
+        tr_debug("DEPK: Session to be removed: port %d address %s", cur_ptr->remote_host.identifier, trace_array(cur_ptr->remote_host.address,16));
         secure_session_delete(to_be_removed);
     }
 
     secure_session_t *this = ns_dyn_mem_alloc(sizeof(secure_session_t));
     if (!this) {
+        tr_debug("DEPK: Out of memory");
         return NULL;
     }
     memset(this, 0, sizeof(secure_session_t));
@@ -175,6 +177,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
     while(secure_session_find_by_timer_id(timer_id)){
         if(timer_id == 0xff){
             ns_dyn_mem_free(this);
+            tr_debug("DEPK: Out of TIMER ID");
             return NULL;
         }
         timer_id++;
@@ -188,10 +191,10 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
                                                &secure_session_sendto, &secure_session_recvfrom, &start_timer, &timer_status);
     if( !this->sec_handler ){
         ns_dyn_mem_free(this);
+        tr_debug("DEPK: Out of memory - 2");
         return NULL;
     }
     this->parent = parent;
-
     this->session_state = SECURE_SESSION_HANDSHAKE_ONGOING;
     ns_list_add_to_start(&secure_session_list, this);
 
@@ -825,6 +828,7 @@ void connection_handler_close_secure_connection( coap_conn_handler_t *handler, u
             secure_session_t *session = secure_session_find( handler->socket, destination_addr_ptr, port );
             if (session) {
                 coap_security_send_close_alert( session->sec_handler );
+                tr_debug("DEPK: Setting session state on port %d for address %s to closed", session->remote_host.identifier, trace_array(session->remote_host.address,16));
                 session->session_state = SECURE_SESSION_CLOSED;
                 session->last_contact_time = coap_service_get_internal_timer_ticks();
             }
