@@ -278,28 +278,26 @@ static int export_key_block(void *ctx,
 
 static int coap_security_handler_configure_keys (coap_security_t *sec, coap_security_keys_t keys, bool is_server)
 {
+    (void) is_server;
+
     int ret = -1;
     switch( sec->_conn_mode ){
         case CERTIFICATE:{
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-        if( keys._cert && mbedtls_x509_crt_parse( &sec->_owncert, keys._cert,
-                                    keys._cert_len ) < 0 ){
+        if( keys._cert && mbedtls_x509_crt_parse( &sec->_owncert, keys._cert, keys._cert_len ) < 0 ){
             break;
         }
+
         if( mbedtls_pk_parse_key(&sec->_pkey, keys._priv_key, keys._priv_key_len, NULL, 0) < 0){
             break;
         }
 
-        if (!is_server) {
-            if (0 != mbedtls_ssl_conf_own_cert(&sec->_conf, &sec->_owncert, &sec->_pkey)) {
-                break;
-            }
-        } else {
-            //TODO: add server certi
+        if (0 != mbedtls_ssl_conf_own_cert(&sec->_conf, &sec->_owncert, &sec->_pkey)) {
+            break;
         }
-        //TODO: use MBEDTLS_SSL_VERIFY_REQUIRED instead of optional
+
         mbedtls_ssl_conf_authmode( &sec->_conf, MBEDTLS_SSL_VERIFY_NONE );
-        mbedtls_ssl_conf_ca_chain( &sec->_conf, &sec->_cacert, NULL );
+        mbedtls_ssl_conf_ca_chain( &sec->_conf, &sec->_owncert, NULL );
         ret = 0;
 #endif
         break;
@@ -338,7 +336,6 @@ static int coap_security_handler_configure_keys (coap_security_t *sec, coap_secu
 
 int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_server, SecureSocketMode sock_mode, coap_security_keys_t keys, uint32_t timeout_min, uint32_t timeout_max)
 {
-
     if( !sec ){
         return -1;
     }
