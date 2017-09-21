@@ -31,6 +31,7 @@
 #include "mbedtls/entropy_poll.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/ssl_ciphersuites.h"
+#include "mbedtls/debug.h"
 
 #include "ns_trace.h"
 #include "nsdynmemLIB.h"
@@ -129,6 +130,21 @@ static int coap_security_handler_init(coap_security_t *sec){
         return -1;
     }
     return 0;
+}
+
+
+static void own_debug( void *ctx, int level,
+                      const char *file, int line,
+                      const char *str )
+{
+    (void)ctx;
+    const char *p, *basename;
+
+    /* Extract basename from file */
+    for( p = basename = file; *p != '\0'; p++ )
+        if( *p == '/' || *p == '\\' )
+            basename = p + 1;
+    tr_debug("%s:%04d: |%d| %s", basename, line, level, str );
 }
 
 bool coap_security_handler_is_started(const coap_security_t *sec)
@@ -371,6 +387,11 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
     {
         return -1;
     }
+
+#ifdef MBEDTLS_DEBUG_C
+    mbedtls_debug_set_threshold(4);
+    mbedtls_ssl_conf_dbg( &sec->_conf, own_debug, NULL);
+#endif
 
     if(!timeout_max && !timeout_min){
         mbedtls_ssl_conf_handshake_timeout( &sec->_conf, DTLS_HANDSHAKE_TIMEOUT_MIN, DTLS_HANDSHAKE_TIMEOUT_MAX );
