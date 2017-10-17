@@ -27,8 +27,10 @@
 #include "coap_security_handler.h"
 
 #define MAX_SECURE_SESSION_COUNT 3
+#define MAX_ONGOING_HANDSHAKES 2
 #define CLOSED_SECURE_SESSION_TIMEOUT 3600          // Seconds
-#define OPEN_SECURE_SESSION_TIMEOUT 18000            // Seconds
+#define ONGOING_HANDSHAKE_TIMEOUT 600               // Seconds
+#define OPEN_SECURE_SESSION_TIMEOUT 18000           // Seconds
 #define SECURE_SESSION_CLEAN_INTERVAL 60            // Seconds
 
 struct internal_socket_s;

@@ -143,6 +143,7 @@ static int8_t virtual_socket_id_allocate()
 
 static secure_session_t *secure_session_create(internal_socket_t *parent, const uint8_t *address_ptr, uint16_t port, SecureConnectionMode secure_mode)
 {
+    uint8_t handshakes = 0;
     if(!address_ptr){
         return NULL;
     }
@@ -162,6 +163,16 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
         }
 
         secure_session_delete(to_be_removed);
+    }
+
+    // Count for ongoing handshakes
+    ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
+        if(cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
+            handshakes++;
+        }
+    }
+    if(handshakes >= MAX_ONGOING_HANDSHAKES) {
+        return NULL;
     }
 
     secure_session_t *this = ns_dyn_mem_alloc(sizeof(secure_session_t));
@@ -945,14 +956,16 @@ void coap_connection_handler_exec(uint32_t time)
     if(ns_list_count(&secure_session_list)){
         // Seek & destroy old sessions where close notify have been sent
         ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
-            if(cur_ptr->session_state == SECURE_SESSION_CLOSED ||
-                    cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
+            if(cur_ptr->session_state == SECURE_SESSION_CLOSED) {
                 if((cur_ptr->last_contact_time +  CLOSED_SECURE_SESSION_TIMEOUT) <= time){
                     secure_session_delete(cur_ptr);
                 }
-            }
-            if(cur_ptr->session_state == SECURE_SESSION_OK){
+            } else if(cur_ptr->session_state == SECURE_SESSION_OK){
                 if((cur_ptr->last_contact_time +  OPEN_SECURE_SESSION_TIMEOUT) <= time){
+                    secure_session_delete(cur_ptr);
+                }
+            } else if(cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
+                if((cur_ptr->last_contact_time +  ONGOING_HANDSHAKE_TIMEOUT) <= time){
                     secure_session_delete(cur_ptr);
                 }
             }
