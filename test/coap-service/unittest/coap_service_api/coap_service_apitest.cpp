@@ -99,3 +99,8 @@ TEST(coap_service_api, test_coap_service_if_find_by_socket)
 {
     CHECK(test_coap_service_if_find_by_socket())
 }
+
+TEST(coap_service_api, test_coap_service_handshake_limit_set)
+{
+    CHECK(test_coap_service_handshake_limit_set())
+}
