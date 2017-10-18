@@ -48,6 +48,9 @@ const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16] = { 0xff, 0x05, [15] = 0xfd }; 
 
 static NS_LIST_DEFINE(socket_list, internal_socket_t, link);
 
+static uint8_t max_handshakes = MAX_ONGOING_HANDSHAKES;
+static uint8_t max_sessions = MAX_SECURE_SESSION_COUNT;
+
 static void timer_cb(void* param);
 
 static void recv_sckt_msg(void *cb_res);
@@ -148,7 +151,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
         return NULL;
     }
 
-    if(MAX_SECURE_SESSION_COUNT <= ns_list_count(&secure_session_list)){
+    if(max_sessions <= ns_list_count(&secure_session_list)){
         // Seek & destroy oldest session where close notify have been sent
         secure_session_t *to_be_removed = NULL;
         ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
@@ -171,7 +174,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
             handshakes++;
         }
     }
-    if(handshakes >= MAX_ONGOING_HANDSHAKES) {
+    if(handshakes >= max_handshakes) {
         return NULL;
     }
 
@@ -946,6 +949,17 @@ int8_t coap_connection_handler_set_timeout(coap_conn_handler_t *handler, uint32_
     }
     handler->socket->timeout_max = max;
     handler->socket->timeout_min = min;
+
+    return 0;
+}
+
+int8_t coap_connection_handler_handshake_limits_set(uint8_t handshakes_limit, uint8_t connections_limit)
+{
+    if (!handshakes_limit || !connections_limit) {
+        return -1;
+    }
+    max_handshakes = handshakes_limit;
+    max_sessions = connections_limit;
 
     return 0;
 }
