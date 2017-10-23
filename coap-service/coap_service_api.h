@@ -298,6 +298,19 @@ extern int8_t coap_service_request_delete(int8_t service_id, uint16_t msg_id);
 extern int8_t coap_service_set_handshake_timeout(int8_t service_id, uint32_t min, uint32_t max);
 
 /**
+ * \brief Set DTLS handshake limit values
+ *
+ * Configures the limits for DTLS sessions. Values must be > 0.
+ *
+ * \param handshakes_max        Maximum amount of simultaneous handshakes.
+ * \param connections_max       Maximum amount of sessions.
+ *
+ * \return -1              For failure
+ *-         0              For success
+ */
+extern int8_t coap_service_handshake_limits_set(uint8_t handshakes_max, uint8_t connections_max);
+
+/**
  * \brief Set CoAP duplication message buffer size
  *
  * Configures the CoAP duplication message buffer size.

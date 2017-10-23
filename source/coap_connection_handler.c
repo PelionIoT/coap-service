@@ -48,6 +48,9 @@ const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16] = { 0xff, 0x05, [15] = 0xfd }; 
 
 static NS_LIST_DEFINE(socket_list, internal_socket_t, link);
 
+static uint8_t max_handshakes = MAX_ONGOING_HANDSHAKES;
+static uint8_t max_sessions = MAX_SECURE_SESSION_COUNT;
+
 static void timer_cb(void* param);
 
 static void recv_sckt_msg(void *cb_res);
@@ -143,11 +146,12 @@ static int8_t virtual_socket_id_allocate()
 
 static secure_session_t *secure_session_create(internal_socket_t *parent, const uint8_t *address_ptr, uint16_t port, SecureConnectionMode secure_mode)
 {
+    uint8_t handshakes = 0;
     if(!address_ptr){
         return NULL;
     }
 
-    if(MAX_SECURE_SESSION_COUNT <= ns_list_count(&secure_session_list)){
+    if(max_sessions <= ns_list_count(&secure_session_list)){
         // Seek & destroy oldest session where close notify have been sent
         secure_session_t *to_be_removed = NULL;
         ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
@@ -162,6 +166,16 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
         }
 
         secure_session_delete(to_be_removed);
+    }
+
+    // Count for ongoing handshakes
+    ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
+        if(cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
+            handshakes++;
+        }
+    }
+    if(handshakes >= max_handshakes) {
+        return NULL;
     }
 
     secure_session_t *this = ns_dyn_mem_alloc(sizeof(secure_session_t));
@@ -939,20 +953,33 @@ int8_t coap_connection_handler_set_timeout(coap_conn_handler_t *handler, uint32_
     return 0;
 }
 
+int8_t coap_connection_handler_handshake_limits_set(uint8_t handshakes_limit, uint8_t connections_limit)
+{
+    if (!handshakes_limit || !connections_limit) {
+        return -1;
+    }
+    max_handshakes = handshakes_limit;
+    max_sessions = connections_limit;
+
+    return 0;
+}
+
 /* No need to call every second - call rather like every minute (SECURE_SESSION_CLEAN_INTERVAL sets this) */
 void coap_connection_handler_exec(uint32_t time)
 {
     if(ns_list_count(&secure_session_list)){
         // Seek & destroy old sessions where close notify have been sent
         ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
-            if(cur_ptr->session_state == SECURE_SESSION_CLOSED ||
-                    cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
+            if(cur_ptr->session_state == SECURE_SESSION_CLOSED) {
                 if((cur_ptr->last_contact_time +  CLOSED_SECURE_SESSION_TIMEOUT) <= time){
                     secure_session_delete(cur_ptr);
                 }
-            }
-            if(cur_ptr->session_state == SECURE_SESSION_OK){
+            } else if(cur_ptr->session_state == SECURE_SESSION_OK){
                 if((cur_ptr->last_contact_time +  OPEN_SECURE_SESSION_TIMEOUT) <= time){
+                    secure_session_delete(cur_ptr);
+                }
+            } else if(cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
+                if((cur_ptr->last_contact_time +  ONGOING_HANDSHAKE_TIMEOUT) <= time){
                     secure_session_delete(cur_ptr);
                 }
             }

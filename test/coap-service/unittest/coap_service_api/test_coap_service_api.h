@@ -58,6 +58,8 @@ bool test_coap_service_get_internal_timer_ticks();
 
 bool test_coap_service_if_find_by_socket();
 
+bool test_coap_service_handshake_limit_set();
+
 
 #ifdef __cplusplus
 }

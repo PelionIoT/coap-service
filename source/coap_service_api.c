@@ -531,6 +531,11 @@ int8_t coap_service_set_handshake_timeout(int8_t service_id, uint32_t min, uint3
     return coap_connection_handler_set_timeout(this->conn_handler, min, max);
 }
 
+int8_t coap_service_handshake_limits_set(uint8_t handshakes_max, uint8_t connections_max)
+{
+    return coap_connection_handler_handshake_limits_set(handshakes_max, connections_max);
+}
+
 int8_t coap_service_set_duplicate_message_buffer(int8_t service_id, uint8_t size)
 {
     (void) service_id;

@@ -567,3 +567,12 @@ bool test_coap_service_if_find_by_socket()
 
     return true;
 }
+
+bool test_coap_service_handshake_limit_set()
+{
+    if (0 != coap_service_handshake_limits_set(2, 2)) {
+        return false;
+    }
+
+    return true;
+}
