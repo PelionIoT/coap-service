@@ -69,9 +69,9 @@ extern const uint8_t COAP_MULTICAST_ADDR_SITE_LOCAL[16]; //!> ff05::fd, COAP sit
  *
  * Function that handles CoAP service message receiving and parsing
  *
- * \param msg_id           Id number of the current message.
+ * \param service_id       Service handle.
  * \param source_address   IPv6 source address.
- * \param source_port      Source port
+ * \param source_port      Source port.
  * \param response_ptr     Pointer to CoAP header structure.
  *
  * \return 0 for success / -1 for failure
@@ -85,7 +85,7 @@ typedef int coap_service_response_recv(int8_t service_id, uint8_t source_address
  *
  * \param service_id         Id number of the current service.
  * \param source_address     IPv6 source address.
- * \param source_port        Source port
+ * \param source_port        Source port.
  * \param request_ptr        Pointer to CoAP header structure.
  *
  * \return Status
@@ -98,8 +98,10 @@ typedef int coap_service_request_recv_cb(int8_t service_id, uint8_t source_addre
  * Starts security service handling and fetches device password.
  *
  * \param service_id         Id number of the current service.
- * \param address            Address of sender
- * \param port               Port of the device
+ * \param address            Address of sender.
+ * \param port               Port of the device.
+ * \param pw                 Pointer where to write the ecjpake password.
+ * \param pw_len             Pointer where to write length of the ecjpake password.
  *
  * \return 0 for success / -1 for failure
  */
@@ -111,8 +113,8 @@ typedef int coap_service_security_start_cb(int8_t service_id, uint8_t address[st
  * CoAP service security done callback function.
  *
  * \param service_id         Id number of the current service.
- * \param address            Address of sender
- * \param keyblock           Security key (40 bits)
+ * \param address            Address of sender.
+ * \param keyblock           Security key (40 bits).
  *
  * \return 0 for success / -1 for failure
  */
@@ -147,22 +149,11 @@ extern void coap_service_delete( int8_t service_id );
  *
  * Closes secure connection (if present), but leaves socket open.
  *
- * \param service_id         Id number of the current service.
+ * \param service_id            Id number of the current service.
+ * \param destimation_addr_ptr  Connection destination address.
+ * \param port                  Connection destination port.
  */
 extern void coap_service_close_secure_connection(int8_t service_id, uint8_t destination_addr_ptr[static 16], uint16_t port);
-
-/**
- * \brief Sets password for device
- *
- * \param service_id         Service id
- * \param address            Device address
- * \param port               Device port
- * \param pw_ptr             Pointer to password.
- * \param pw_len             Lenght of password.
- *
- * \return 0 for success / -1 for failure
- */
-//int coap_service_security_key_set(int8_t service_id, uint8_t address[static 16], uint16_t port, uint8_t *pw_ptr, uint8_t pw_len);
 
 /**
  * \brief Virtual socket sent callback.
@@ -213,7 +204,6 @@ extern int16_t coap_service_virtual_socket_set_cb(int8_t service_id, coap_servic
  *
  * \param service_id       Id number of the current service.
  * \param *uri             Uri address.
- * \param port             port that Application wants to use for communicate with coap server.
  * \param allowed_method   Informs method that is allowed to use (used defines described above).
  * \param *request_recv_cb CoAP service request receive callback function pointer.
  *
@@ -240,7 +230,7 @@ extern int8_t coap_service_unregister_uri(int8_t service_id, const char *uri);
  *
  * \param service_id            Id number of the current service.
  * \param options               Options defined above.
- * \param destination_addr                  IPv6 address.
+ * \param destination_addr      IPv6 address.
  * \param destination_port      Destination port
  * \param msg_type              Message type can be found from sn_coap_header.
  * \param msg_code              Message code can be found from sn_coap_header.
@@ -261,14 +251,38 @@ extern uint16_t coap_service_request_send(int8_t service_id, uint8_t options, co
  * Build and sends CoAP service response message.
  *
  * \param service_id       Id number of the current service.
- * \param msg_id           Message ID number.
  * \param options          Options defined above.
- * \param response_ptr     Pointer to CoAP header structure.
+ * \param request_ptr      Pointer to CoAP request message header structure.
+ * \param message_code     Message code can be found from sn_coap_header.
+ * \param content_type     Content type can be found from sn_coap_header.
+ * \param payload_ptr      Pointer to message content.
+ * \param payload_len      Lenght of the message.
  *
  * \return -1              For failure
  *-         0              For success
  */
 extern int8_t coap_service_response_send(int8_t service_id, uint8_t options, sn_coap_hdr_s *request_ptr, sn_coap_msg_code_e message_code, sn_coap_content_format_e content_type, const uint8_t *payload_ptr,uint16_t payload_len);
+
+/**
+ * \brief Sends CoAP service response
+ *
+ * Build and sends CoAP service response message based on CoAP request message id.
+ *
+ * \param service_id       Id number of the current service.
+ * \param options          Options defined above.
+ * \param msg_id           Request messages ID.
+ * \param msg_type         Message type can be found from sn_coap_header.
+ * \param message_code     Message code can be found from sn_coap_header.
+ * \param content_type     Content type can be found from sn_coap_header.
+ * \param payload_ptr      Pointer to message content.
+ * \param payload_len      Lenght of the message.
+ *
+ * \return -1              For failure
+ *-         0              For success
+ */
+extern int8_t coap_service_response_send_by_msg_id(int8_t service_id, uint8_t options, uint16_t msg_id, sn_coap_msg_code_e message_code, sn_coap_content_format_e content_type, const uint8_t *payload_ptr,uint16_t payload_len);
+
+
 
 /**
  * \brief Delete CoAP request transaction
@@ -316,7 +330,7 @@ extern int8_t coap_service_handshake_limits_set(uint8_t handshakes_max, uint8_t 
  * Configures the CoAP duplication message buffer size.
  *
  * \param service_id       Id number of the current service.
- * \param size             Buffer size (messages)
+ * \param size             Buffer size (messages).
  *
  * \return -1              For failure
  *-         0              For success
@@ -329,10 +343,10 @@ extern int8_t coap_service_set_duplicate_message_buffer(int8_t service_id, uint8
  * Set DTLS certificates.
  *
  * \param service_id       Id number of the current service.
- * \param cert             Pointer to certificate chain
- * \param cert_len         Certificate length
- * \param priv_key         pointer to private key
- * \param priv_key_len     length of private key
+ * \param cert             Pointer to certificate chain.
+ * \param cert_len         Certificate length.
+ * \param priv_key         pointer to private key.
+ * \param priv_key_len     length of private key.
  *
  * \return -1              For failure
  *-         0              For success
