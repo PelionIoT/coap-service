@@ -88,7 +88,8 @@ typedef int coap_service_response_recv(int8_t service_id, uint8_t source_address
  * \param source_port        Source port.
  * \param request_ptr        Pointer to CoAP header structure.
  *
- * \return Status
+ * \return -1 = Message ignored, no response will be sent. Transaction will be deleted.
+ *          0 = Response is either already sent or will be send. Transaction is not deleted.
  */
 typedef int coap_service_request_recv_cb(int8_t service_id, uint8_t source_address[static 16], uint16_t source_port, sn_coap_hdr_s *request_ptr);
 

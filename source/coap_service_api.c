@@ -171,6 +171,8 @@ static uint8_t coap_tx_function(uint8_t *data_ptr, uint16_t data_len, sn_nsdl_ad
         }
         memcpy(transaction_ptr->data_ptr, data_ptr, data_len);
         transaction_ptr->data_len = data_len;
+    } else if (transaction_ptr->resp_cb == NULL ) {
+        transaction_delete(transaction_ptr);
     }
 
     return 0;

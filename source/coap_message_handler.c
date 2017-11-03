@@ -267,7 +267,10 @@ int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t
                 memcpy(transaction_ptr->token, coap_message->token_ptr, coap_message->token_len);
             }
             transaction_ptr->remote_port = port;
-            cb(socket_id, coap_message, transaction_ptr);
+            if (cb(socket_id, coap_message, transaction_ptr) < 0) {
+                // negative return value = message ignored -> delete transaction
+                transaction_delete(transaction_ptr);
+            }
             goto exit;
         } else {
             ret_val = -1;
