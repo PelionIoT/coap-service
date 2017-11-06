@@ -283,6 +283,7 @@ int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t
         }
         if (!this) {
             tr_error("client transaction not found");
+            ret_val = -1;
             goto exit;
         }
         tr_debug("Service %d, response received", this->service_id);
@@ -421,7 +422,9 @@ int8_t coap_message_handler_response_send(coap_msg_handler_t *handle, int8_t ser
 
     ret_val =  coap_message_handler_resp_build_and_send(handle, response, transaction_ptr);
     sn_coap_parser_release_allocated_coap_msg_mem(handle->coap, response);
-    transaction_delete(transaction_ptr);
+    if(ret_val == 0) {
+        transaction_delete(transaction_ptr);
+    }
 
     return ret_val;
 }
@@ -458,8 +461,9 @@ int8_t coap_message_handler_response_send_by_msg_id(coap_msg_handler_t *handle, 
     }
 
     ret_val = coap_message_handler_resp_build_and_send(handle, &response, transaction_ptr);
-
-    transaction_delete(transaction_ptr);
+    if(ret_val == 0) {
+        transaction_delete(transaction_ptr);
+    }
 
     return ret_val;
 }

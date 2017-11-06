@@ -146,6 +146,7 @@ static uint8_t coap_tx_function(uint8_t *data_ptr, uint16_t data_len, sn_nsdl_ad
     coap_service_t *this;
     coap_transaction_t *transaction_ptr = coap_message_handler_transaction_valid(param);
     ns_address_t dest_addr;
+    int ret_val;
 
     if (!transaction_ptr || !data_ptr) {
         return 0;
@@ -162,16 +163,19 @@ static uint8_t coap_tx_function(uint8_t *data_ptr, uint16_t data_len, sn_nsdl_ad
     dest_addr.identifier = address_ptr->port;
     dest_addr.type = ADDRESS_IPV6;
 
-    if (-2 == coap_connection_handler_send_data(this->conn_handler, &dest_addr, transaction_ptr->local_address,
-            data_ptr, data_len, (this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS) == COAP_SERVICE_OPTIONS_SECURE_BYPASS)) {
-        transaction_ptr->data_ptr = ns_dyn_mem_alloc(data_len);
+    ret_val = coap_connection_handler_send_data(this->conn_handler, &dest_addr, transaction_ptr->local_address,
+            data_ptr, data_len, (this->service_options & COAP_SERVICE_OPTIONS_SECURE_BYPASS) == COAP_SERVICE_OPTIONS_SECURE_BYPASS);
+    if (ret_val == 0) {
         if (!transaction_ptr->data_ptr) {
-            tr_debug("coap tx out of memory");
-            return 0;
+            transaction_ptr->data_ptr = ns_dyn_mem_alloc(data_len);
+            if (!transaction_ptr->data_ptr) {
+                tr_debug("coap tx out of memory");
+                return 0;
+            }
+            memcpy(transaction_ptr->data_ptr, data_ptr, data_len);
+            transaction_ptr->data_len = data_len;
         }
-        memcpy(transaction_ptr->data_ptr, data_ptr, data_len);
-        transaction_ptr->data_len = data_len;
-    } else if (transaction_ptr->resp_cb == NULL ) {
+    } else if ((ret_val == -1) || (transaction_ptr->resp_cb == NULL)) {
         transaction_delete(transaction_ptr);
     }
 

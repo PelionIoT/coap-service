@@ -65,6 +65,11 @@ void connection_handler_close_secure_connection( coap_conn_handler_t *handler, u
 int coap_connection_handler_open_connection(coap_conn_handler_t *handler, uint16_t listen_port, bool use_ephemeral_port, bool is_secure, bool real_socket, bool bypassSec);
 
 //If returns -2, it means security was started and data was not send
+/*
+ * \return > 0 in OK
+ * \return 0 Session started, data not send
+ * \return -1 failure
+ */
 int coap_connection_handler_send_data(coap_conn_handler_t *handler, const ns_address_t *dest_addr, const uint8_t src_address[static 16], uint8_t *data_ptr, uint16_t data_len, bool bypass_link_sec);
 
 int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t address[static 16], uint16_t port, uint8_t *data_ptr, uint16_t data_len);

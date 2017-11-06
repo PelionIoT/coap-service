@@ -193,6 +193,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
         }
         timer_id++;
     }
+    this->last_contact_time = coap_service_get_internal_timer_ticks();
     this->timer.id = timer_id;
     this->remote_host.type = ADDRESS_IPV6;
     memcpy(this->remote_host.address, address_ptr, 16);
@@ -884,11 +885,15 @@ int coap_connection_handler_send_data(coap_conn_handler_t *handler, const ns_add
     if (!handler || !handler->socket || !dest_addr) {
         return -1;
     }
+
+    /* Secure send */
     if (handler->socket->is_secure) {
         handler->socket->bypass_link_sec = bypass_link_sec;
         secure_session_t *session = secure_session_find(handler->socket, dest_addr->address, dest_addr->identifier);
         if (!session) {
             coap_security_keys_t security_material;
+            int ret_val = 0;
+
             memset(&security_material, 0, sizeof(coap_security_keys_t));
 
             if (!handler->_get_password_cb || 0 != handler->_get_password_cb(handler->socket->socket, (uint8_t*)dest_addr->address, dest_addr->identifier, &security_material)) {
@@ -896,38 +901,43 @@ int coap_connection_handler_send_data(coap_conn_handler_t *handler, const ns_add
             }
 
             session = secure_session_create(handler->socket, dest_addr->address, dest_addr->identifier, security_material.mode);
-            if (!session) {
-                ns_dyn_mem_free(security_material._key);
-                return -1;
+            if (!session || (0 > coap_security_handler_connect_non_blocking(session->sec_handler, false, DTLS, security_material, handler->socket->timeout_min, handler->socket->timeout_max))) {
+                ret_val = -1;
             }
-            session->last_contact_time = coap_service_get_internal_timer_ticks();
 
-            coap_security_handler_connect_non_blocking(session->sec_handler, false, DTLS, security_material, handler->socket->timeout_min, handler->socket->timeout_max);
             ns_dyn_mem_free(security_material._key);
-            return -2;
+            return ret_val;
 
         } else if (session->session_state == SECURE_SESSION_OK) {
-            if (coap_security_handler_send_message(session->sec_handler, data_ptr, data_len ) > 0 ) {
-                session->last_contact_time = coap_service_get_internal_timer_ticks();
-                return 0;
+            session->last_contact_time = coap_service_get_internal_timer_ticks();
+            if (0 > coap_security_handler_send_message(session->sec_handler, data_ptr, data_len )) {
+                return -1;
             }
         }
-        return -1;
-    }else{
+    /* Unsecure */
+    } else {
+        /* Virtual socket */
         if (!handler->socket->real_socket && handler->_send_cb) {
-            return handler->_send_cb((int8_t)handler->socket->socket, dest_addr->address, dest_addr->identifier, data_ptr, data_len);
-        }
-        int opt_name = SOCKET_IPV6_PREFER_SRC_6LOWPAN_SHORT;
-        int8_t securityLinkLayer = 1;
-        if (bypass_link_sec) {
-            securityLinkLayer = 0;
-        }
+            if (handler->_send_cb((int8_t)handler->socket->socket, dest_addr->address, dest_addr->identifier, data_ptr, data_len) < 0) {
+                return -1;
+            }
+        } else {
+            int opt_name = SOCKET_IPV6_PREFER_SRC_6LOWPAN_SHORT;
+            int8_t securityLinkLayer = 1;
+            if (bypass_link_sec) {
+                securityLinkLayer = 0;
+            }
 
-        socket_setsockopt(handler->socket->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_ADDR_PREFERENCES, &opt_name, sizeof(int));
-        socket_setsockopt(handler->socket->socket, SOCKET_IPPROTO_IPV6, SOCKET_LINK_LAYER_SECURITY, &securityLinkLayer, sizeof(int8_t));
+            socket_setsockopt(handler->socket->socket, SOCKET_IPPROTO_IPV6, SOCKET_IPV6_ADDR_PREFERENCES, &opt_name, sizeof(int));
+            socket_setsockopt(handler->socket->socket, SOCKET_IPPROTO_IPV6, SOCKET_LINK_LAYER_SECURITY, &securityLinkLayer, sizeof(int8_t));
 
-        return send_to_real_socket(handler->socket->socket, dest_addr, src_address, data_ptr, data_len);
+            if (0 > send_to_real_socket(handler->socket->socket, dest_addr, src_address, data_ptr, data_len)) {
+                return -1;
+            }
+        }
     }
+
+    return 1;
 }
 
 bool coap_connection_handler_socket_belongs_to(coap_conn_handler_t *handler, int8_t socket_id)
