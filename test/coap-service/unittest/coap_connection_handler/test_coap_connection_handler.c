@@ -161,7 +161,7 @@ bool test_coap_connection_handler_send_data()
         return false;
 
     socket_api_stub.int8_value = 7;
-    if( 7 != coap_connection_handler_send_data(handler, &addr, ns_in6addr_any, NULL, 0, true))
+    if( 1 != coap_connection_handler_send_data(handler, &addr, ns_in6addr_any, NULL, 0, true))
         return false;
     connection_handler_destroy(handler, false);
 
