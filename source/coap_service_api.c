@@ -175,7 +175,7 @@ static uint8_t coap_tx_function(uint8_t *data_ptr, uint16_t data_len, sn_nsdl_ad
             memcpy(transaction_ptr->data_ptr, data_ptr, data_len);
             transaction_ptr->data_len = data_len;
         }
-    } else if ((ret_val == -1) || (transaction_ptr->resp_cb == NULL)) {
+    } else if ((ret_val == -1) || (transaction_ptr->req_msg_type != COAP_MSG_TYPE_CONFIRMABLE)) {
         transaction_delete(transaction_ptr);
     }
 
