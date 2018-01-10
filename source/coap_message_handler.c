@@ -48,12 +48,12 @@ static NS_LIST_DEFINE(request_list, coap_transaction_t, link);
 
 static coap_transaction_t *transaction_find_client_by_token(uint8_t *token, uint8_t token_len, const uint8_t address[static 16], uint16_t port)
 {
+    (void) address;
+    (void) port;
     coap_transaction_t *this = NULL;
 
     ns_list_foreach(coap_transaction_t, cur_ptr, &request_list) {
-        if ((cur_ptr->remote_port == port) && (memcmp(cur_ptr->remote_address, address, 16) == 0) &&
-                (cur_ptr->token_len == token_len) && (memcmp(cur_ptr->token, token, token_len) == 0) &&
-                cur_ptr->client_request) {
+        if ((cur_ptr->token_len == token_len) && (memcmp(cur_ptr->token, token, token_len) == 0) && cur_ptr->client_request) {
            this = cur_ptr;
            break;
         }
