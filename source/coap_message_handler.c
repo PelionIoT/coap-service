@@ -381,7 +381,7 @@ uint16_t coap_message_handler_request_send(coap_msg_handler_t *handle, int8_t se
         //No response expected
         return 0;
     }
-    return transaction_ptr->msg_id;
+    return request.msg_id;
 }
 
 static int8_t coap_message_handler_resp_build_and_send(coap_msg_handler_t *handle, sn_coap_hdr_s *coap_msg_ptr, coap_transaction_t *transaction_ptr)
