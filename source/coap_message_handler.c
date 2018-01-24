@@ -97,13 +97,28 @@ static coap_transaction_t *transaction_find_by_address(uint8_t *address_ptr, uin
     return this;
 }
 
+/* retransmission valid time is calculated to be max. time that CoAP message sending can take: */
+/* Number of retransmisisons, each retransmission is 2 * previous retransmisison time */
+/* + random factor (max. 1.5) */
+static uint32_t transaction_valid_time_calculate(void)
+{
+    int i;
+    uint32_t time_valid = 0;
+
+    for (i = 0; i <= COAP_RESENDING_COUNT; i++) {
+        time_valid += (COAP_RESENDING_INTERVAL << i) * 1.5;
+    }
+
+    return time_valid + coap_service_get_internal_timer_ticks();
+}
+
 static coap_transaction_t *transaction_create(void)
 {
     coap_transaction_t *this = ns_dyn_mem_alloc(sizeof(coap_transaction_t));
     if (this) {
         memset(this, 0, sizeof(coap_transaction_t));
         this->client_request = true;// default to client initiated method
-        this->create_time = coap_service_get_internal_timer_ticks();
+        this->valid_until = transaction_valid_time_calculate();
         ns_list_add_to_start(&request_list, this);
     }
 
@@ -198,6 +213,9 @@ coap_msg_handler_t *coap_message_handler_init(void *(*used_malloc_func_ptr)(uint
 
     /* Set default buffer size for CoAP duplicate message detection */
     sn_coap_protocol_set_duplicate_buffer_size(handle->coap, DUPLICATE_MESSAGE_BUFFER_SIZE);
+
+    /* Set default CoAP retransmission paramters */
+    sn_coap_protocol_set_retransmission_parameters(handle->coap, COAP_RESENDING_COUNT, COAP_RESENDING_INTERVAL);
 
     return handle;
 }
@@ -518,8 +536,13 @@ int8_t coap_message_handler_exec(coap_msg_handler_t *handle, uint32_t current_ti
 
     // Remove outdated transactions from queue
     ns_list_foreach_safe(coap_transaction_t, transaction, &request_list) {
-        if ((transaction->create_time + TRANSACTION_LIFETIME) < current_time) {
-            transaction_delete(transaction);
+        if (transaction->valid_until < current_time) {
+            tr_debug("transaction %d timed out", transaction->msg_id);
+            ns_list_remove(&request_list, transaction);
+            if (transaction->resp_cb) {
+                transaction->resp_cb(transaction->service_id, transaction->remote_address, transaction->remote_port, NULL);
+            }
+            transaction_free(transaction);
         }
     }
 
