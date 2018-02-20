@@ -252,6 +252,36 @@ bool test_coap_message_handler_request_send()
     if( 2 != coap_message_handler_request_send(handle, 3, 0, buf, 24, 1, 2, &uri, 4, NULL, 0, &resp_recv))
         return false;
 
+    /* Clear all transactions */
+    if( 0 != coap_message_handler_exec(handle, 0xffffffff))
+        return false;
+
+    sn_coap_protocol_stub.expectedInt16 = -4;
+    nsdynmemlib_stub.returnCounter = 3;
+    if( 2 != coap_message_handler_request_send(handle, 3, 0, buf, 24, 1, 2, &uri, 4, NULL, 0, &transaction_recv_cb))
+        return false;
+
+    transaction_cb = 0;
+    sn_coap_protocol_stub.expectedInt8 = 0;
+    if( 0 != coap_message_handler_exec(handle, 12))
+        return false;
+
+    if (transaction_cb != 1)
+        return false;
+
+    sn_coap_protocol_stub.expectedInt16 = -2;
+    nsdynmemlib_stub.returnCounter = 3;
+    if( 2 != coap_message_handler_request_send(handle, 3, 0, buf, 24, 1, 2, &uri, 4, NULL, 0, &transaction_recv_cb))
+        return false;
+
+    transaction_cb = 0;
+    if( 0 != coap_message_handler_exec(handle, 2)) {
+        return false;
+    }
+    if (transaction_cb != 1)
+        return false;
+
+
     free(sn_coap_protocol_stub.expectedCoap);
     sn_coap_protocol_stub.expectedCoap = NULL;
     coap_message_handler_destroy(handle);
