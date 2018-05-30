@@ -87,6 +87,8 @@ static const int PSK_SUITES[] = {
 static void set_timer( void *sec_obj, uint32_t int_ms, uint32_t fin_ms );
 static int get_timer( void *sec_obj );
 
+static int coap_security_count = 0;
+
 int entropy_poll( void *data, unsigned char *output, size_t len, size_t *olen );
 
 //Point these back to M2MConnectionHandler!!!
@@ -119,6 +121,7 @@ static int coap_security_handler_init(coap_security_t *sec){
 
     if( mbedtls_entropy_add_source( &sec->_entropy, entropy_poll, NULL,
                                 128, entropy_source_type ) < 0 ){
+        tr_error("AWH: mbedtls_entropy_add_source failed");
         return -1;
     }
 
@@ -126,6 +129,7 @@ static int coap_security_handler_init(coap_security_t *sec){
                                (const unsigned char *) pers,
                                strlen( pers ) ) ) != 0 )
     {
+        tr_error("AWH: mbedtls_ctr_drbg_seed failed");
         return -1;
     }
     return 0;
@@ -154,7 +158,6 @@ static void coap_security_handler_reset(coap_security_t *sec){
     mbedtls_ssl_free(&sec->_ssl);
 }
 
-
 coap_security_t *coap_security_create(int8_t socket_id, int8_t timer_id, void *handle, SecureConnectionMode mode,
                                           send_cb *socket_cb,
                                           receive_cb *receive_data_cb,
@@ -162,17 +165,22 @@ coap_security_t *coap_security_create(int8_t socket_id, int8_t timer_id, void *h
                                           timer_status_cb *timer_stat_cb)
 {
     if (socket_cb == NULL || receive_data_cb == NULL || timer_start_cb == NULL || timer_stat_cb == NULL) {
+        tr_error("AWH: Param check fails");
         return NULL;
     }
     coap_security_t *this = ns_dyn_mem_alloc(sizeof(coap_security_t));
     if( !this ){
+        tr_error("AWH: COap security_t alloc fails %d", (int)sizeof(coap_security_t));
         return NULL;
     }
     memset(this, 0, sizeof(coap_security_t));
     if (-1 == coap_security_handler_init(this)) {
+        tr_error("AWH: coap_security_handler_init alloc  fails");
         ns_dyn_mem_free(this);
         return NULL;
     }
+    coap_security_count++;
+    tr_info("AWH: coap_security_t %x, count %d", this, coap_security_count);
     this->_handle = handle;
     this->_conn_mode = mode;
     memset(this->_pw, 0, 64);
@@ -190,6 +198,8 @@ coap_security_t *coap_security_create(int8_t socket_id, int8_t timer_id, void *h
 void coap_security_destroy(coap_security_t *sec){
     if( sec ){
         coap_security_handler_reset(sec);
+        coap_security_count--;
+        tr_debug("AWH: coap_security_destroy %x count %d", sec, coap_security_count);
         ns_dyn_mem_free(sec);
         sec = NULL;
     }

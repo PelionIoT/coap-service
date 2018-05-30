@@ -129,6 +129,7 @@ static bool is_secure_session_valid(secure_session_t *session)
 
 static void secure_session_delete(secure_session_t *this)
 {
+    tr_debug("AWH: secure_session_delete()");
     if (this) {
         ns_list_remove(&secure_session_list, this);
         transactions_delete_all(this->remote_host.address, this->remote_host.identifier);
@@ -164,6 +165,17 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
         return NULL;
     }
 
+    const mem_stat_t *stat = ns_dyn_mem_get_mem_stat();
+
+    tr_debug(
+            "AWH Heap size: %d, Reserved sectors: %d, Reserved: %d Reserved max: %d Total allocated: %d allocation fail: %d"
+            ,stat->heap_sector_size
+            ,stat->heap_sector_alloc_cnt
+            ,stat->heap_sector_allocated_bytes
+            ,stat->heap_sector_allocated_bytes_max
+            ,stat->heap_alloc_total_bytes
+            ,stat->heap_alloc_fail_cnt);
+
     if(max_sessions <= ns_list_count(&secure_session_list)){
         // Seek & destroy oldest session where close notify have been sent
         secure_session_t *to_be_removed = NULL;
@@ -175,9 +187,11 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
             }
         }
         if(!to_be_removed){
+            tr_err("AWH to_be_removed not found");
             return NULL;
         }
 
+        tr_err("AWH Calling secure_session_delete1");
         secure_session_delete(to_be_removed);
     }
 
@@ -188,11 +202,13 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
         }
     }
     if(handshakes >= max_handshakes) {
+        tr_err("AWH handshakes %d %d", handshakes, max_handshakes);
         return NULL;
     }
 
     secure_session_t *this = ns_dyn_mem_alloc(sizeof(secure_session_t));
     if (!this) {
+        tr_err("AWH mem alloc session");
         return NULL;
     }
     memset(this, 0, sizeof(secure_session_t));
@@ -201,6 +217,7 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
 
     while(secure_session_find_by_timer_id(timer_id)){
         if(timer_id == 0xff){
+            tr_err("AWH: Timer ID");
             ns_dyn_mem_free(this);
             return NULL;
         }
@@ -211,10 +228,12 @@ static secure_session_t *secure_session_create(internal_socket_t *parent, const 
     this->remote_host.type = ADDRESS_IPV6;
     memcpy(this->remote_host.address, address_ptr, 16);
     this->remote_host.identifier = port;
+    tr_debug("AWH: remote addr: %s", trace_ipv6(address_ptr));
 
     this->sec_handler = coap_security_create(parent->socket, this->timer.id, this, secure_mode,
                                                &secure_session_sendto, &secure_session_recvfrom, &start_timer, &timer_status);
     if( !this->sec_handler ){
+        tr_err("AWH: sec handler");
         ns_dyn_mem_free(this);
         return NULL;
     }
@@ -341,6 +360,7 @@ static void int_socket_delete(internal_socket_t *this)
     if (this) {
         this->usage_counter--;
         if(this->usage_counter == 0){
+            tr_debug("AWH: int_socket_delete()");
             clear_secure_sessions(this);
             socket_close(this->socket);
             ns_list_remove(&socket_list, this);
@@ -668,6 +688,7 @@ static void secure_recv_sckt_msg(void *cb_res)
                 } else if (ret < 0){
                     // error handling
                     // TODO: here we also should clear CoAP retransmission buffer and inform that CoAP request sending is failed.
+                    tr_debug("AWH: calling secure_session_delete2()");
                     secure_session_delete(session);
                 }
             //Session valid
@@ -678,6 +699,7 @@ static void secure_recv_sckt_msg(void *cb_res)
                 if( len < 0 ){
                     if (len != MBEDTLS_ERR_SSL_WANT_READ && len != MBEDTLS_ERR_SSL_WANT_WRITE &&
                             len != MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE) {
+                        tr_debug("AWH: calling secure_session_delete3()");
                         secure_session_delete(session);
                     }
                     ns_dyn_mem_free(data);
@@ -771,6 +793,7 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
                 else if (ret < 0) {
                     // error handling
                     // TODO: here we also should clear CoAP retransmission buffer and inform that CoAP request sending is failed.
+                    tr_debug("AWH: calling secure_session_delete4()");
                     secure_session_delete(session);
                 }
                 //TODO: error handling
@@ -781,6 +804,7 @@ int coap_connection_handler_virtual_recv(coap_conn_handler_t *handler, uint8_t a
                 if (len < 0) {
                     if (len != MBEDTLS_ERR_SSL_WANT_READ && len != MBEDTLS_ERR_SSL_WANT_WRITE &&
                             len != MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE) {
+                        tr_debug("AWH: calling secure_session_delete5()");
                         secure_session_delete(session);
                     }
                     ns_dyn_mem_free(data);
@@ -995,14 +1019,17 @@ void coap_connection_handler_exec(uint32_t time)
         ns_list_foreach(secure_session_t, cur_ptr, &secure_session_list) {
             if(cur_ptr->session_state == SECURE_SESSION_CLOSED) {
                 if((cur_ptr->last_contact_time +  CLOSED_SECURE_SESSION_TIMEOUT) <= time){
+                    tr_debug("AWH: calling secure_session_delete6()");
                     secure_session_delete(cur_ptr);
                 }
             } else if(cur_ptr->session_state == SECURE_SESSION_OK){
                 if((cur_ptr->last_contact_time +  OPEN_SECURE_SESSION_TIMEOUT) <= time){
+                    tr_debug("AWH: calling secure_session_delete7()");
                     secure_session_delete(cur_ptr);
                 }
             } else if(cur_ptr->session_state == SECURE_SESSION_HANDSHAKE_ONGOING){
                 if((cur_ptr->last_contact_time +  ONGOING_HANDSHAKE_TIMEOUT) <= time){
+                    tr_debug("AWH: calling secure_session_delete8()");
                     secure_session_delete(cur_ptr);
                 }
             }
