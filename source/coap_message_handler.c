@@ -166,7 +166,7 @@ static int8_t coap_rx_function(sn_coap_hdr_s *resp_ptr, sn_nsdl_addr_s *address_
     (void)address_ptr;
     (void)param;
 
-    tr_warn("transaction was not handled %d", resp_ptr->msg_id);
+    tr_warn("transaction not handled %d", resp_ptr->msg_id);
     if (!resp_ptr) {
         return -1;
     }
@@ -193,7 +193,7 @@ coap_msg_handler_t *coap_message_handler_init(void *(*used_malloc_func_ptr)(uint
     }
 
     coap_msg_handler_t *handle;
-    handle = used_malloc_func_ptr(sizeof(coap_msg_handler_t));
+    handle = ns_dyn_mem_alloc(sizeof(coap_msg_handler_t));
     if (handle == NULL) {
         return NULL;
     }
@@ -207,7 +207,7 @@ coap_msg_handler_t *coap_message_handler_init(void *(*used_malloc_func_ptr)(uint
 
     handle->coap = sn_coap_protocol_init(used_malloc_func_ptr, used_free_func_ptr, used_tx_callback_ptr, &coap_rx_function);
     if( !handle->coap ){
-        used_free_func_ptr(handle);
+        ns_dyn_mem_free(handle);
         return NULL;
     }
 

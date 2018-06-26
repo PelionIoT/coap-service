@@ -404,7 +404,6 @@ static int send_to_real_socket(int8_t socket_id, const ns_address_t *address, co
         ns_cmsghdr_t *cmsg;
         ns_in6_pktinfo_t *pktinfo;
 
-        tr_debug("send from source address %s", trace_array(source_address, 16));
         msghdr.msg_control = ancillary_databuffer;
         msghdr.msg_controllen = sizeof(ancillary_databuffer);
 
