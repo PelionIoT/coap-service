@@ -606,3 +606,12 @@ int8_t coap_service_certificate_set(int8_t service_id, const unsigned char *cert
 
     return 0;
 }
+
+int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size)
+{
+    if (!coap_service_handle) {
+        return -1;
+    }
+
+    return sn_coap_protocol_set_block_size(coap_service_handle->coap, size);
+}
