@@ -609,6 +609,8 @@ int8_t coap_service_certificate_set(int8_t service_id, const unsigned char *cert
 
 int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size)
 {
+    (void) service_id;
+
     if (!coap_service_handle) {
         return -1;
     }
