@@ -201,9 +201,10 @@ static void service_event_handler(arm_event_s *event)
         tr_debug("service tasklet initialised");
         /*initialize coap service and listen socket*/
     }
+
     if (event->event_type == ARM_LIB_SYSTEM_TIMER_EVENT && event->event_id == COAP_TICK_TIMER) {
         coap_message_handler_exec(coap_service_handle, coap_ticks++);
-        if(coap_ticks && !coap_ticks % SECURE_SESSION_CLEAN_INTERVAL){
+        if(coap_ticks && !(coap_ticks % SECURE_SESSION_CLEAN_INTERVAL)){
             coap_connection_handler_exec(coap_ticks);
         }
     }
