@@ -310,7 +310,6 @@ static int coap_security_handler_configure_keys (coap_security_t *sec, coap_secu
             break;
         }
 
-        mbedtls_ssl_conf_authmode( &sec->_conf, MBEDTLS_SSL_VERIFY_NONE );
         mbedtls_ssl_conf_ca_chain( &sec->_conf, &sec->_owncert, NULL );
         ret = 0;
 #endif
@@ -378,6 +377,8 @@ int coap_security_handler_connect_non_blocking(coap_security_t *sec, bool is_ser
     else{
         mbedtls_ssl_conf_handshake_timeout( &sec->_conf, timeout_min, timeout_max );
     }
+
+    mbedtls_ssl_conf_authmode(&sec->_conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
 
     mbedtls_ssl_conf_rng( &sec->_conf, mbedtls_ctr_drbg_random, &sec->_ctr_drbg );
 
