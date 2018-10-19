@@ -542,6 +542,11 @@ int8_t coap_service_request_delete(int8_t service_id, uint16_t msg_id)
     return coap_message_handler_request_delete(coap_service_handle, service_id, msg_id);
 }
 
+void coap_service_request_delete_by_service_id(int8_t service_id)
+{
+    coap_message_handler_request_delete_by_service_id(coap_service_handle, service_id);
+}
+
 int8_t coap_service_set_handshake_timeout(int8_t service_id, uint32_t min, uint32_t max)
 {
     coap_service_t *this = service_find(service_id);
