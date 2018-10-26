@@ -133,6 +133,7 @@ static coap_transaction_t *transaction_create(void)
         this->client_request = true;// default to client initiated method
         this->valid_until = transaction_valid_time_calculate();
         ns_list_add_to_start(&request_list, this);
+        tr_debug("AWH: transaction_ptr alloc %x, count %d valid %d", this, ns_list_count(&request_list), this->valid_until - coap_service_get_internal_timer_ticks());
     }
 
     return this;
@@ -143,6 +144,7 @@ static void transaction_free(coap_transaction_t *this)
     if (this->data_ptr) {
         ns_dyn_mem_free(this->data_ptr);
     }
+    tr_debug("AWH: transaction_ptr free %x", this);
     ns_dyn_mem_free(this);
 }
 
@@ -349,6 +351,7 @@ int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t
         goto exit;
     /* Response received */
     } else {
+        transaction_delete(transaction_ptr); // transaction_ptr not used when receiving response
         if (coap_message->token_ptr) {
             this = transaction_find_client_by_token(coap_message->token_ptr, coap_message->token_len, source_addr_ptr, port);
         }
@@ -617,7 +620,7 @@ int8_t coap_message_handler_exec(coap_msg_handler_t *handle, uint32_t current_ti
     // Remove outdated transactions from queue
     ns_list_foreach_safe(coap_transaction_t, transaction, &request_list) {
         if (transaction->valid_until < current_time) {
-            tr_debug("transaction %d timed out", transaction->msg_id);
+            tr_debug("transaction %d timed out (%x)", transaction->msg_id, transaction);
             ns_list_remove(&request_list, transaction);
             if (transaction->resp_cb) {
                 transaction->resp_cb(transaction->service_id, transaction->remote_address, transaction->remote_port, NULL);
