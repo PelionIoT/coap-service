@@ -586,6 +586,10 @@ int8_t coap_message_handler_request_delete(coap_msg_handler_t *handle, int8_t se
         tr_error("response transaction not found");
         return -2;
     }
+
+    if (transaction_ptr->resp_cb) {
+        transaction_ptr->resp_cb(transaction_ptr->service_id, transaction_ptr->remote_address, transaction_ptr->remote_port, NULL);
+    }
     transaction_delete(transaction_ptr);
     return 0;
 }
