@@ -349,6 +349,7 @@ int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t
         goto exit;
     /* Response received */
     } else {
+        transaction_delete(transaction_ptr); // transaction_ptr not needed in response
         if (coap_message->token_ptr) {
             this = transaction_find_client_by_token(coap_message->token_ptr, coap_message->token_len, source_addr_ptr, port);
         }
