@@ -121,6 +121,25 @@ typedef int coap_service_security_start_cb(int8_t service_id, uint8_t address[st
 typedef int coap_service_security_done_cb(int8_t service_id, uint8_t address[static 16], uint8_t keyblock[static 40]);
 
 /**
+ * \brief Address scope reading callback
+ *
+ * Address scope reading callback function type used in method coap_service_address_scope_read_function_set.
+ *
+ * \param interface_id       Application interface ID.
+ * \param address            Address to check scope.
+ *
+ * \return 1 if address scope is interface local,
+ *         2 if address scope is link local,
+ *         3 if address scope is realm local,
+ *         4 if address scope is admin local,
+ *         5 if address scope is site local,
+ *         6 if address scope is organization local,
+ *         7 if address scope is global,*
+ *         <0 in case of errors.
+ */
+typedef int coap_service_addr_scope_read_cb(int8_t interface_id, uint8_t address[static 16]);
+
+/**
  * \brief Initialise server instance.
  *
  * Initialise Thread services for the registered application.
@@ -131,7 +150,7 @@ typedef int coap_service_security_done_cb(int8_t service_id, uint8_t address[sta
  * \param *start_ptr         Callback to inform security handling is started and to fetch device password.
  * \param *coap_security_done_cb  Callback to inform security handling is done.
  *
- *  \return service_id / -1 for failure
+ * \return service_id / -1 for failure
  */
 extern int8_t coap_service_initialize(int8_t interface_id, uint16_t listen_port, uint8_t service_options, coap_service_security_start_cb *start_ptr, coap_service_security_done_cb *coap_security_done_cb);
 
@@ -373,6 +392,23 @@ extern int8_t coap_service_certificate_set(int8_t service_id, const unsigned cha
  *-         0              For success
  */
 extern int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size);
+
+/**
+ * \brief Set address scope reading function.
+ *
+ * Set address scope reading function for listen port used for the service.
+ *
+ * CoAP service will call this function to validate incoming CoAP request
+ * destination address scope.
+ *
+ * \param service_id        Id number of the current service.
+ * \param address_read_cb   Callback to be called when address scope is read.
+ *
+ * \return -1              For failure
+ *          0              For success
+ */
+extern int8_t coap_service_address_scope_read_function_set(int8_t service_id, coap_service_addr_scope_read_cb *address_read_cb);
+
 #ifdef __cplusplus
 }
 #endif

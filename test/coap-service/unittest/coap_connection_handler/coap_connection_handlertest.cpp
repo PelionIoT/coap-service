@@ -71,3 +71,8 @@ TEST(coap_connection_handler, test_security_callbacks)
     CHECK(test_security_callbacks());
 }
 
+TEST(coap_connection_handler, test_address_scope_read_and_set)
+{
+    CHECK(test_address_scope_read_and_set());
+}
+

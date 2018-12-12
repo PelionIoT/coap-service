@@ -36,6 +36,7 @@ typedef enum session_state_e {
 
 typedef struct internal_socket_s {
     coap_conn_handler_t *parent;
+    addr_scope_cb *addr_scope_check_cb;  // callback function to check address scope
 
     uint32_t timeout_min;
     uint32_t timeout_max;
@@ -1022,4 +1023,21 @@ void coap_connection_handler_exec(uint32_t time)
             }
         }
     }
+}
+
+int coap_connection_handler_address_scope_callback_set(coap_conn_handler_t *handler, addr_scope_cb *addr_scope_cb_func)
+{
+    if (!handler) {
+        return -1;
+    }
+    handler->socket->addr_scope_check_cb = addr_scope_cb_func;
+    return 0;
+}
+
+addr_scope_cb *coap_connection_handler_address_scope_callback_get(coap_conn_handler_t *handler)
+{
+    if (!handler) {
+        return NULL;
+    }
+    return handler->socket->addr_scope_check_cb;
 }

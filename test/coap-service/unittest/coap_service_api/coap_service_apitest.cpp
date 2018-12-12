@@ -120,3 +120,9 @@ TEST(coap_service_api, test_coap_service_handshake_limit_set)
 {
     CHECK(test_coap_service_handshake_limit_set())
 }
+
+TEST(coap_service_api, test_coap_service_address_scope_read_set)
+{
+    CHECK(test_coap_service_address_scope_read_set())
+}
+

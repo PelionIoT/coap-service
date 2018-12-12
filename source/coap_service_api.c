@@ -35,6 +35,7 @@
 #include "coap_service_api_internal.h"
 #include "coap_message_handler.h"
 #include "mbed-coap/sn_coap_protocol.h"
+#include "socket_api.h"
 
 static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr);
 
@@ -240,6 +241,18 @@ static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_m
             transaction_ptr->options = COAP_REQUEST_OPTIONS_SECURE_BYPASS;
         }
         transaction_ptr->service_id = this->service_id;
+
+        coap_service_addr_scope_read_cb *addr_scope_read_cb = coap_connection_handler_address_scope_callback_get(this->conn_handler);
+
+        if (addr_scope_read_cb && memcmp(transaction_ptr->local_address, ns_in6addr_any, 16)) {
+            // address scope checking in use and address exists
+            int addr_scope = addr_scope_read_cb(this->interface_id, transaction_ptr->local_address);
+            if (7 == addr_scope) {
+                tr_err("Drop msg, addr scope error %s", trace_ipv6(transaction_ptr->local_address));
+                return -1;
+            }
+        }
+
         return uri_reg_ptr->request_recv_cb(this->service_id, transaction_ptr->remote_address, transaction_ptr->remote_port, coap_message);
     }
     return -1;
@@ -261,7 +274,7 @@ static int recv_cb(int8_t socket_id, uint8_t src_address[static 16], uint16_t po
     }
     memcpy(data_ptr, data, len);
     data_len = len;
-    tr_debug("service recv socket data len %d ", data_len);
+    tr_debug("Service recv %d bytes", data_len);
 
     //parse coap message what CoAP to use
     int ret = coap_message_handler_coap_msg_process(coap_service_handle, socket_id, src_address, port, dst_address, data_ptr, data_len, &coap_msg_process_callback);
@@ -625,4 +638,13 @@ int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size)
     }
 
     return sn_coap_protocol_set_block_size(coap_service_handle->coap, size);
+}
+
+int8_t coap_service_address_scope_read_function_set(int8_t service_id, coap_service_addr_scope_read_cb *address_scope_read_cb)
+{
+    coap_service_t *this = service_find(service_id);
+    if (this) {
+        return (int8_t)coap_connection_handler_address_scope_callback_set(this->conn_handler, address_scope_read_cb);
+    }
+    return -1;
 }

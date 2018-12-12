@@ -42,6 +42,7 @@ coap_conn_handler_t *connection_handler_create(int (*recv_cb)(int8_t socket_id, 
     thread_conn_handler_stub.receive_from_sock_cb = recv_cb;
     thread_conn_handler_stub.get_passwd_cb = pw_cb;
     thread_conn_handler_stub.sec_done_cb = done_cb;
+    thread_conn_handler_stub.addr_scope_check_cb = NULL;
     return thread_conn_handler_stub.handler_obj;
 }
 
@@ -81,5 +82,15 @@ int8_t coap_connection_handler_handshake_limits_set(uint8_t handshakes_limit, ui
 
 void coap_connection_handler_exec(uint32_t time)
 {
+}
 
+int coap_connection_handler_address_scope_callback_set(coap_conn_handler_t *handler, addr_scope_cb *addr_scope_cb_func)
+{
+    thread_conn_handler_stub.addr_scope_check_cb = addr_scope_cb_func;
+    return 0;
+}
+
+addr_scope_cb *coap_connection_handler_address_scope_callback_get(coap_conn_handler_t *handler)
+{
+    return thread_conn_handler_stub.addr_scope_check_cb;
 }
