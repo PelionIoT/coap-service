@@ -294,7 +294,7 @@ coap_transaction_t *coap_message_handler_find_transaction(uint8_t *address_ptr, 
 }
 
 int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t socket_id, const uint8_t source_addr_ptr[static 16], uint16_t port, const uint8_t dst_addr_ptr[static 16],
-                                              uint8_t *data_ptr, uint16_t data_len, int16_t (msg_process_callback)(int8_t, sn_coap_hdr_s *, coap_transaction_t *))
+                                              uint8_t *data_ptr, uint16_t data_len, int16_t (msg_process_callback)(int8_t, sn_coap_hdr_s *, coap_transaction_t *, const uint8_t *))
 {
     sn_nsdl_addr_s src_addr;
     sn_coap_hdr_s *coap_message;
@@ -345,7 +345,7 @@ int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t
             memcpy(transaction_ptr->token, coap_message->token_ptr, coap_message->token_len);
             transaction_ptr->token_len = coap_message->token_len;
         }
-        if (msg_process_callback(socket_id, coap_message, transaction_ptr) < 0) {
+        if (msg_process_callback(socket_id, coap_message, transaction_ptr, dst_addr_ptr) < 0) {
             // negative return value = message ignored -> delete transaction
             transaction_delete(transaction_ptr);
         }

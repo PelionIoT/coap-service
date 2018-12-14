@@ -61,7 +61,7 @@ bool test_coap_service_if_find_by_socket();
 
 bool test_coap_service_handshake_limit_set();
 
-bool test_coap_service_address_scope_read_set();
+bool test_coap_service_msg_prevalidate_cb_read_and_set();
 
 
 #ifdef __cplusplus

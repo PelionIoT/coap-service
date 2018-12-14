@@ -512,7 +512,7 @@ bool test_security_callbacks()
     return true;
 }
 
-bool test_address_scope_read_and_set()
+bool test_coap_connection_handler_msg_prevalidate_cb_read_and_set()
 {
     coap_security_handler_stub.counter = -1;
 
@@ -525,19 +525,20 @@ bool test_address_scope_read_and_set()
         return false;
     }
 
-    if (-1 != coap_connection_handler_address_scope_callback_set(NULL, 1000)) {
+    if (-1 != coap_connection_handler_msg_prevalidate_callback_set(NULL, 1000)) {
         return false;
     }
 
-    if (0 != coap_connection_handler_address_scope_callback_set(handler, 1000)) {
+    if (0 != coap_connection_handler_msg_prevalidate_callback_set(handler, 1000)) {
         return false;
     }
 
-    if (NULL != coap_connection_handler_address_scope_callback_get(NULL)) {
+    uint16_t listen_socket_port;
+    if (NULL != coap_connection_handler_msg_prevalidate_callback_get(NULL, &listen_socket_port)) {
         return false;
     }
 
-    if (1000 != coap_connection_handler_address_scope_callback_get(handler)) {
+    if (1000 != coap_connection_handler_msg_prevalidate_callback_get(handler, &listen_socket_port)) {
         return false;
     }
 

@@ -45,9 +45,9 @@ int virtual_sock_send_cb(int8_t service_id, uint8_t destination_addr_ptr[static 
     return 2;
 }
 
-int addr_scope_read_cb(int8_t interface_id, uint8_t address[static 16])
+int msg_prevalidate_cb(int8_t interface_id, uint8_t address[static 16])
 {
-    return 7;
+    return 1;
 }
 
 bool test_coap_service_initialize()
@@ -446,7 +446,7 @@ bool test_conn_handler_callbacks()
             memset(tr, 0, sizeof(coap_transaction_t));
             tr->local_address[0] = 2;
 
-            if (0 != coap_service_address_scope_read_function_set(1, addr_scope_read_cb)) {
+            if (0 != coap_service_msg_prevalidate_callback_set(1, msg_prevalidate_cb)) {
                 return false;
             }
 
@@ -454,7 +454,7 @@ bool test_conn_handler_callbacks()
                 return false;
             }
 
-            if (0 != coap_service_address_scope_read_function_set(1, NULL)) {
+            if (0 != coap_service_msg_prevalidate_callback_set(1, NULL)) {
                 return false;
             }
 
@@ -664,10 +664,10 @@ bool test_coap_service_handshake_limit_set()
     return true;
 }
 
-bool test_coap_service_address_scope_read_set()
+bool test_coap_service_msg_prevalidate_cb_read_and_set()
 {
     /* No valid service ID - return failure */
-    if (0 == coap_service_address_scope_read_function_set(0, addr_scope_read_cb)) {
+    if (0 == coap_service_msg_prevalidate_callback_set(0, msg_prevalidate_cb)) {
         return false;
     }
 
@@ -681,11 +681,11 @@ bool test_coap_service_address_scope_read_set()
         return false;
     }
 
-    if (0 != coap_service_address_scope_read_function_set(1, addr_scope_read_cb)) {
+    if (0 != coap_service_msg_prevalidate_callback_set(1, msg_prevalidate_cb)) {
         return false;
     }
 
-    if (0 != coap_service_address_scope_read_function_set(1, NULL)) {
+    if (0 != coap_service_msg_prevalidate_callback_set(1, NULL)) {
         return false;
     }
 

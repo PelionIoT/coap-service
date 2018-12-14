@@ -41,7 +41,7 @@ bool test_socket_api_callbacks();
 
 bool test_security_callbacks();
 
-bool test_address_scope_read_and_set();
+bool test_coap_connection_handler_msg_prevalidate_cb_read_and_set();
 
 #ifdef __cplusplus
 }

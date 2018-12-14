@@ -121,23 +121,23 @@ typedef int coap_service_security_start_cb(int8_t service_id, uint8_t address[st
 typedef int coap_service_security_done_cb(int8_t service_id, uint8_t address[static 16], uint8_t keyblock[static 40]);
 
 /**
- * \brief Address scope reading callback
+ * \brief Message prevalidation callback
  *
- * Address scope reading callback function type used in method coap_service_address_scope_read_function_set.
+ * Message prevalidation callback function type used in method coap_service_msg_prevalidate_callback_set.
  *
- * \param interface_id       Application interface ID.
- * \param address            Address to check scope.
+ * \param interface_id      Application interface ID.
+ * \param source_address    Sender address.
+ * \param source_port       Sender port.
+ * \param local_address     Local address.
+ * \param local_port        Local port.
+ * \param request_uri       CoAP URI, NUL terminated.
  *
- * \return 1 if address scope is interface local,
- *         2 if address scope is link local,
- *         3 if address scope is realm local,
- *         4 if address scope is admin local,
- *         5 if address scope is site local,
- *         6 if address scope is organization local,
- *         7 if address scope is global,*
- *         <0 in case of errors.
+ * \return <0 in case of errors,
+ *         0 if message is valid to process further,
+ *         >0 if message should be dropped.
  */
-typedef int coap_service_addr_scope_read_cb(int8_t interface_id, uint8_t address[static 16]);
+
+typedef int coap_service_msg_prevalidate_cb(int8_t interface_id, uint8_t source_address[static 16], uint16_t source_port, uint8_t local_address[static 16], uint16_t local_port, char *request_uri);
 
 /**
  * \brief Initialise server instance.
@@ -394,20 +394,19 @@ extern int8_t coap_service_certificate_set(int8_t service_id, const unsigned cha
 extern int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size);
 
 /**
- * \brief Set address scope reading function.
+ * \brief Set message prevalidation callback function.
  *
- * Set address scope reading function for listen port used for the service.
+ * Set message prevalidation callback function for the service. Callback will be called for all services using the same listen port.
  *
- * CoAP service will call this function to validate incoming CoAP request
- * destination address scope.
+ * CoAP service will call this function to allow application prevalidate incoming CoAP message before passing it to application.
  *
- * \param service_id        Id number of the current service.
- * \param address_read_cb   Callback to be called when address scope is read.
+ * \param service_id            Id number of the current service.
+ * \param msg_prevalidate_cb    Callback to be called to validate incoming message before pprocessing it.
  *
  * \return -1              For failure
  *          0              For success
  */
-extern int8_t coap_service_address_scope_read_function_set(int8_t service_id, coap_service_addr_scope_read_cb *address_read_cb);
+extern int8_t coap_service_msg_prevalidate_callback_set(int8_t service_id, coap_service_msg_prevalidate_cb *msg_prevalidate_cb);
 
 #ifdef __cplusplus
 }

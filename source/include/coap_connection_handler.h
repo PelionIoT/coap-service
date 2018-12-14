@@ -38,7 +38,7 @@ typedef int send_to_socket_cb(int8_t socket_id, const uint8_t address[static 16]
 typedef int receive_from_socket_cb(int8_t socket_id, uint8_t src_address[static 16], uint16_t port, const uint8_t dst_address[static 16], unsigned char *, int);
 typedef int get_pw_cb(int8_t socket_id, uint8_t address[static 16], uint16_t port, coap_security_keys_t *security_ptr);
 typedef void security_done_cb(int8_t socket_id, uint8_t address[static 16], uint16_t port, uint8_t keyblock[static 40]);
-typedef int addr_scope_cb(int8_t interface_id, uint8_t address[static 16]);
+typedef void cch_func_cb(void);
 
 typedef struct coap_conn_handler_s {
     struct internal_socket_s *socket;
@@ -82,8 +82,8 @@ int8_t coap_connection_handler_handshake_limits_set(uint8_t handshakes_limit, ui
 
 void coap_connection_handler_exec(uint32_t time);
 
-int coap_connection_handler_address_scope_callback_set(coap_conn_handler_t *handler, addr_scope_cb *addr_scope_cb_func);
+int coap_connection_handler_msg_prevalidate_callback_set(coap_conn_handler_t *handler, cch_func_cb *function_callback);
 
-addr_scope_cb *coap_connection_handler_address_scope_callback_get(coap_conn_handler_t *handler);
+cch_func_cb *coap_connection_handler_msg_prevalidate_callback_get(coap_conn_handler_t *handler, uint16_t *listen_socket_port);
 
 #endif
