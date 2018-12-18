@@ -30,6 +30,7 @@ typedef struct {
     int int_value;
     bool bool_value;
     coap_conn_handler_t *handler_obj;
+    cch_func_cb *cch_function_callback;
 
     int (*send_to_sock_cb)(int8_t socket_id, uint8_t address[static 16], uint16_t port, const void *, int);
     int (*receive_from_sock_cb)(int8_t socket_id, uint8_t src_address[static 16], uint16_t port, const uint8_t dst_address[static 16], unsigned char *data, int len);

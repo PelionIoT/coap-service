@@ -511,3 +511,41 @@ bool test_security_callbacks()
     sckt_data = NULL;
     return true;
 }
+
+bool test_coap_connection_handler_msg_prevalidate_cb_read_and_set()
+{
+    coap_security_handler_stub.counter = -1;
+
+    coap_security_handler_stub.sec_obj = coap_security_handler_stub_alloc();
+
+    nsdynmemlib_stub.returnCounter = 1;
+    coap_conn_handler_t *handler = connection_handler_create(&receive_from_sock_cb, &send_to_sock_cb, NULL, NULL);
+    nsdynmemlib_stub.returnCounter = 2;
+    if (0 != coap_connection_handler_open_connection(handler, 22, false, true, true, false)) {
+        return false;
+    }
+
+    if (-1 != coap_connection_handler_msg_prevalidate_callback_set(NULL, 1000)) {
+        return false;
+    }
+
+    if (0 != coap_connection_handler_msg_prevalidate_callback_set(handler, 1000)) {
+        return false;
+    }
+
+    uint16_t listen_socket_port;
+    if (NULL != coap_connection_handler_msg_prevalidate_callback_get(NULL, &listen_socket_port)) {
+        return false;
+    }
+
+    if (1000 != coap_connection_handler_msg_prevalidate_callback_get(handler, &listen_socket_port)) {
+        return false;
+    }
+
+    connection_handler_destroy(handler, false);
+
+    free(coap_security_handler_stub.sec_obj);
+    coap_security_handler_stub.sec_obj = NULL;
+
+    return true;
+}

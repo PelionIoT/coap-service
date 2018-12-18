@@ -45,6 +45,11 @@ int virtual_sock_send_cb(int8_t service_id, uint8_t destination_addr_ptr[static 
     return 2;
 }
 
+int msg_prevalidate_cb(int8_t interface_id, uint8_t address[static 16])
+{
+    return 1;
+}
+
 bool test_coap_service_initialize()
 {
     if (-1 != coap_service_initialize(1, 2, 0, NULL, NULL)) {
@@ -439,6 +444,19 @@ bool test_conn_handler_callbacks()
 
             coap_transaction_t *tr = (coap_transaction_t *)malloc(sizeof(coap_transaction_t));
             memset(tr, 0, sizeof(coap_transaction_t));
+            tr->local_address[0] = 2;
+
+            if (0 != coap_service_msg_prevalidate_callback_set(1, msg_prevalidate_cb)) {
+                return false;
+            }
+
+            if (-1 != coap_message_handler_stub.cb(1, coap, tr)) {
+                return false;
+            }
+
+            if (0 != coap_service_msg_prevalidate_callback_set(1, NULL)) {
+                return false;
+            }
 
             if (2 != coap_message_handler_stub.cb(1, coap, tr)) {
                 return false;
@@ -642,6 +660,39 @@ bool test_coap_service_handshake_limit_set()
     if (0 != coap_service_handshake_limits_set(2, 2)) {
         return false;
     }
+
+    return true;
+}
+
+bool test_coap_service_msg_prevalidate_cb_read_and_set()
+{
+    /* No valid service ID - return failure */
+    if (0 == coap_service_msg_prevalidate_callback_set(0, msg_prevalidate_cb)) {
+        return false;
+    }
+
+    /* Init service */
+    thread_conn_handler_stub.handler_obj = (coap_conn_handler_t *)malloc(sizeof(coap_conn_handler_t));
+    memset(thread_conn_handler_stub.handler_obj, 0, sizeof(coap_conn_handler_t));
+
+    nsdynmemlib_stub.returnCounter = 1;
+    thread_conn_handler_stub.bool_value = 0;
+    if (1 != coap_service_initialize(1, 2, 0, NULL, NULL)) {
+        return false;
+    }
+
+    if (0 != coap_service_msg_prevalidate_callback_set(1, msg_prevalidate_cb)) {
+        return false;
+    }
+
+    if (0 != coap_service_msg_prevalidate_callback_set(1, NULL)) {
+        return false;
+    }
+
+    /* Teardown */
+    coap_service_delete(1);
+    free(thread_conn_handler_stub.handler_obj);
+    thread_conn_handler_stub.handler_obj = NULL;
 
     return true;
 }

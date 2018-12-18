@@ -36,7 +36,7 @@
 #include "coap_message_handler.h"
 #include "mbed-coap/sn_coap_protocol.h"
 
-static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr);
+static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr, const uint8_t * local_addr);
 
 typedef struct uri_registration {
     char *uri_ptr;
@@ -211,7 +211,7 @@ static void service_event_handler(arm_event_s *event)
     eventOS_event_timer_request((uint8_t)COAP_TICK_TIMER, ARM_LIB_SYSTEM_TIMER_EVENT, tasklet_id, 1000);
 }
 
-static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr)
+static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr, const uint8_t * local_addr)
 {
     coap_service_t *this;
     if (!coap_message || !transaction_ptr) {
@@ -239,7 +239,25 @@ static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_m
             // this check can be removed I think
             transaction_ptr->options = COAP_REQUEST_OPTIONS_SECURE_BYPASS;
         }
+        coap_service_msg_prevalidate_cb *msg_prevalidate_callback;
+        uint16_t listen_socket_port;
+
         transaction_ptr->service_id = this->service_id;
+
+        msg_prevalidate_callback = (coap_service_msg_prevalidate_cb*)coap_connection_handler_msg_prevalidate_callback_get(this->conn_handler, &listen_socket_port);
+        if (msg_prevalidate_callback) {
+            // message prevalidation activated for the port
+            char request_uri[coap_message->uri_path_len + 1];
+            memcpy(request_uri, coap_message->uri_path_ptr, coap_message->uri_path_len);
+            request_uri[coap_message->uri_path_len] = 0;
+
+            int msg_prevalidate_status = msg_prevalidate_callback(this->interface_id, transaction_ptr->remote_address, transaction_ptr->remote_port, (uint8_t*)local_addr, listen_socket_port, request_uri);
+            if (msg_prevalidate_status == 1) {
+                tr_warn("Drop msg %s", request_uri);
+                return -1;
+            }
+        }
+
         return uri_reg_ptr->request_recv_cb(this->service_id, transaction_ptr->remote_address, transaction_ptr->remote_port, coap_message);
     }
     return -1;
@@ -261,7 +279,7 @@ static int recv_cb(int8_t socket_id, uint8_t src_address[static 16], uint16_t po
     }
     memcpy(data_ptr, data, len);
     data_len = len;
-    tr_debug("service recv socket data len %d ", data_len);
+    tr_debug("Service recv %d bytes", data_len);
 
     //parse coap message what CoAP to use
     int ret = coap_message_handler_coap_msg_process(coap_service_handle, socket_id, src_address, port, dst_address, data_ptr, data_len, &coap_msg_process_callback);
@@ -625,4 +643,13 @@ int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size)
     }
 
     return sn_coap_protocol_set_block_size(coap_service_handle->coap, size);
+}
+
+int8_t coap_service_msg_prevalidate_callback_set(int8_t service_id, coap_service_msg_prevalidate_cb *msg_prevalidate_cb)
+{
+    coap_service_t *this = service_find(service_id);
+    if (this) {
+        return (int8_t)coap_connection_handler_msg_prevalidate_callback_set(this->conn_handler, (cch_func_cb*)msg_prevalidate_cb);
+    }
+    return -1;
 }
