@@ -253,7 +253,7 @@ static int16_t coap_msg_process_callback(int8_t socket_id, sn_coap_hdr_s *coap_m
 
             int msg_prevalidate_status = msg_prevalidate_callback(this->interface_id, transaction_ptr->remote_address, transaction_ptr->remote_port, (uint8_t*)local_addr, listen_socket_port, request_uri);
             if (msg_prevalidate_status == 1) {
-                tr_warn("Drop msg %s", request_uri);
+                // tr_warn("Drop CoAP msg %s from %s to %s", request_uri, trace_ipv6(transaction_ptr->remote_address), trace_ipv6(local_addr));
                 return -1;
             }
         }
