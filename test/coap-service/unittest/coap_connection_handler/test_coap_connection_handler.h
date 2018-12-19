@@ -43,6 +43,8 @@ bool test_security_callbacks();
 
 bool test_coap_connection_handler_msg_prevalidate_cb_read_and_set();
 
+bool test_coap_connection_handler_find_by_socket_port();
+
 #ifdef __cplusplus
 }
 #endif
