@@ -417,8 +417,8 @@ bool test_conn_handler_callbacks()
 
         //This could be moved to own test function,
         //but thread_conn_handler_stub.receive_from_sock_cb must be called successfully
-        if (coap_message_handler_stub.cb) {
-            if (-1 != coap_message_handler_stub.cb(1, 1, NULL, NULL, local_addr)) {
+        if (coap_message_handler_stub.msg_process_cb) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, NULL, NULL, local_addr)) {
                 return false;
             }
 
@@ -429,7 +429,7 @@ bool test_conn_handler_callbacks()
             coap->uri_path_ptr = &uri;
             coap->uri_path_len = 2;
 
-            if (-1 != coap_message_handler_stub.cb(1, 1, coap, NULL, local_addr)) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, NULL, local_addr)) {
                 return false;
             }
 
@@ -439,7 +439,7 @@ bool test_conn_handler_callbacks()
                 return false;
             }
 
-            if (-1 != coap_message_handler_stub.cb(1, 1, coap, NULL, local_addr)) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, NULL, local_addr)) {
                 return false;
             }
 
@@ -451,7 +451,7 @@ bool test_conn_handler_callbacks()
                 return false;
             }
 
-            if (-1 != coap_message_handler_stub.cb(1, 1, coap, tr, local_addr)) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, tr, local_addr)) {
                 return false;
             }
 
@@ -459,7 +459,7 @@ bool test_conn_handler_callbacks()
                 return false;
             }
 
-            if (2 != coap_message_handler_stub.cb(1, 1, coap, tr, local_addr)) {
+            if (2 != coap_message_handler_stub.msg_process_cb(1, 1, coap, tr, local_addr)) {
                 return false;
             }
 

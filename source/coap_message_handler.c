@@ -294,7 +294,7 @@ coap_transaction_t *coap_message_handler_find_transaction(uint8_t *address_ptr, 
 }
 
 int16_t coap_message_handler_coap_msg_process(coap_msg_handler_t *handle, int8_t socket_id, int8_t recv_if_id, const uint8_t source_addr_ptr[static 16], uint16_t port, const uint8_t dst_addr_ptr[static 16],
-                                              uint8_t *data_ptr, uint16_t data_len, int16_t (msg_process_callback)(int8_t, int8_t, sn_coap_hdr_s *, coap_transaction_t *, const uint8_t *))
+                                              uint8_t *data_ptr, uint16_t data_len,  coap_msg_process_cb *msg_process_callback)
 {
     sn_nsdl_addr_s src_addr;
     sn_coap_hdr_s *coap_message;
