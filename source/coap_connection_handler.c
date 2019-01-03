@@ -1039,12 +1039,12 @@ int coap_connection_handler_msg_prevalidate_callback_set(coap_conn_handler_t *ha
 
 coap_conn_handler_t *coap_connection_handler_find_by_socket_port(uint16_t listen_port)
 {
-     ns_list_foreach(internal_socket_t, cur_ptr, &socket_list) {
-         if (cur_ptr->listen_port == listen_port) {
-             return cur_ptr->parent;
-         }
-     }
-     return NULL;
+    ns_list_foreach(internal_socket_t, cur_ptr, &socket_list) {
+        if (cur_ptr->listen_port == listen_port) {
+            return cur_ptr->parent;
+        }
+    }
+    return NULL;
 }
 
 cch_func_cb *coap_connection_handler_msg_prevalidate_callback_get(coap_conn_handler_t *handler, uint16_t *listen_socket_port)

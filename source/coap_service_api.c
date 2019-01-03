@@ -36,7 +36,7 @@
 #include "coap_message_handler.h"
 #include "mbed-coap/sn_coap_protocol.h"
 
-static int16_t coap_msg_process_callback(int8_t socket_id, int8_t recv_if_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr, const uint8_t * local_addr);
+static int16_t coap_msg_process_callback(int8_t socket_id, int8_t recv_if_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr, const uint8_t *local_addr);
 
 typedef struct uri_registration {
     char *uri_ptr;
@@ -218,7 +218,7 @@ static void service_event_handler(arm_event_s *event)
     eventOS_event_timer_request((uint8_t)COAP_TICK_TIMER, ARM_LIB_SYSTEM_TIMER_EVENT, tasklet_id, 1000);
 }
 
-static int16_t coap_msg_process_callback(int8_t socket_id, int8_t recv_if_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr, const uint8_t * local_addr)
+static int16_t coap_msg_process_callback(int8_t socket_id, int8_t recv_if_id, sn_coap_hdr_s *coap_message, coap_transaction_t *transaction_ptr, const uint8_t *local_addr)
 {
     coap_service_t *this;
     coap_service_msg_prevalidate_cb *msg_prevalidate_callback;
@@ -239,14 +239,14 @@ static int16_t coap_msg_process_callback(int8_t socket_id, int8_t recv_if_id, sn
         }
     }
 
-    msg_prevalidate_callback = (coap_service_msg_prevalidate_cb*)coap_connection_handler_msg_prevalidate_callback_get(this->conn_handler, &listen_socket_port);
+    msg_prevalidate_callback = (coap_service_msg_prevalidate_cb *)coap_connection_handler_msg_prevalidate_callback_get(this->conn_handler, &listen_socket_port);
     if (msg_prevalidate_callback) {
         // message prevalidation activated for the port
         char request_uri[coap_message->uri_path_len + 1];
         memcpy(request_uri, coap_message->uri_path_ptr, coap_message->uri_path_len);
         request_uri[coap_message->uri_path_len] = 0;
 
-        int msg_prevalidate_status = msg_prevalidate_callback(this->interface_id, (uint8_t*)local_addr, listen_socket_port, recv_if_id, transaction_ptr->remote_address, transaction_ptr->remote_port, request_uri);
+        int msg_prevalidate_status = msg_prevalidate_callback(this->interface_id, (uint8_t *)local_addr, listen_socket_port, recv_if_id, transaction_ptr->remote_address, transaction_ptr->remote_port, request_uri);
         if (msg_prevalidate_status >= 1) {
             tr_deep("Drop CoAP msg %s from %s to %s", request_uri, trace_ipv6(transaction_ptr->remote_address), trace_ipv6(local_addr));
             return -1;
@@ -664,7 +664,7 @@ int8_t coap_service_msg_prevalidate_callback_set(uint16_t listen_socket, coap_se
 {
     coap_conn_handler_t *conn_handler = coap_connection_handler_find_by_socket_port(listen_socket);
     if (conn_handler) {
-        return (int8_t)coap_connection_handler_msg_prevalidate_callback_set(conn_handler, (cch_func_cb*)msg_prevalidate_cb);
+        return (int8_t)coap_connection_handler_msg_prevalidate_callback_set(conn_handler, (cch_func_cb *)msg_prevalidate_cb);
     }
     return -1;
 }
