@@ -70,7 +70,7 @@ static uint32_t coap_ticks = 1;
 
 #define COAP_TICK_TIMER 0xf1
 
-#define TRACE_DEEP
+//#define TRACE_DEEP
 #ifdef TRACE_DEEP
 #define tr_deep   tr_debug
 #else
