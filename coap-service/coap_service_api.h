@@ -125,19 +125,20 @@ typedef int coap_service_security_done_cb(int8_t service_id, uint8_t address[sta
  *
  * Message prevalidation callback function type used in method coap_service_msg_prevalidate_callback_set.
  *
- * \param interface_id      Application interface ID.
- * \param source_address    Sender address.
- * \param source_port       Sender port.
- * \param local_address     Local address.
- * \param local_port        Local port.
- * \param request_uri       CoAP URI, NUL terminated.
+ * \param local_interface_id    Local interface ID, message arrived to this interface.
+ * \param local_address         Local address, message arrived to this address.
+ * \param local_port            Local port, message arrived to this port.
+ * \param recv_interface_id     Interface ID where message was received.
+ * \param source_address        Sender address.
+ * \param source_port           Sender port.
+ * \param coap_uri              CoAP URI, NUL terminated.
  *
  * \return <0 in case of errors,
  *         0 if message is valid to process further,
  *         >0 if message should be dropped.
  */
 
-typedef int coap_service_msg_prevalidate_cb(int8_t interface_id, uint8_t source_address[static 16], uint16_t source_port, uint8_t local_address[static 16], uint16_t local_port, char *request_uri);
+typedef int coap_service_msg_prevalidate_cb(int8_t local_interface_id, uint8_t local_address[static 16], uint16_t local_port, int8_t recv_interface_id, uint8_t source_address[static 16], uint16_t source_port, char *coap_uri);
 
 /**
  * \brief Initialise server instance.
@@ -400,13 +401,13 @@ extern int8_t coap_service_blockwise_size_set(int8_t service_id, uint16_t size);
  *
  * CoAP service will call this function to allow application prevalidate incoming CoAP message before passing it to application.
  *
- * \param service_id            Id number of the current service.
- * \param msg_prevalidate_cb    Callback to be called to validate incoming message before pprocessing it.
+ * \param listen_port           Socket port where to set callback.
+ * \param msg_prevalidate_cb    Callback to be called to validate incoming message before processing it. Use NULL to clear callback usage.
  *
  * \return -1              For failure
  *          0              For success
  */
-extern int8_t coap_service_msg_prevalidate_callback_set(int8_t service_id, coap_service_msg_prevalidate_cb *msg_prevalidate_cb);
+extern int8_t coap_service_msg_prevalidate_callback_set(uint16_t listen_port, coap_service_msg_prevalidate_cb *msg_prevalidate_cb);
 
 #ifdef __cplusplus
 }

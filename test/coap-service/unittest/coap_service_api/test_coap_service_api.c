@@ -379,6 +379,7 @@ bool test_eventOS_callbacks()
 bool test_conn_handler_callbacks()
 {
     uint8_t buf[16];
+    uint8_t local_addr[16] = {0};
     thread_conn_handler_stub.handler_obj = (coap_conn_handler_t *)malloc(sizeof(coap_conn_handler_t));
     memset(thread_conn_handler_stub.handler_obj, 0, sizeof(coap_conn_handler_t));
     nsdynmemlib_stub.returnCounter = 1;
@@ -400,7 +401,7 @@ bool test_conn_handler_callbacks()
 
     if (thread_conn_handler_stub.receive_from_sock_cb) {
         coap_message_handler_stub.int16_value = 2;
-        if (-1 != thread_conn_handler_stub.receive_from_sock_cb(1, buf, 12, NULL, NULL, 0)) {
+        if (-1 != thread_conn_handler_stub.receive_from_sock_cb(1, 2, buf, 12, NULL, NULL, 0)) {
             return false;
         }
 
@@ -408,7 +409,7 @@ bool test_conn_handler_callbacks()
         uint8_t *ptr = ns_dyn_mem_alloc(5);
         memset(ptr, 3, 5);
         nsdynmemlib_stub.returnCounter = 1;
-        if (2 != thread_conn_handler_stub.receive_from_sock_cb(1, buf, 12, NULL, ptr, 5)) {
+        if (2 != thread_conn_handler_stub.receive_from_sock_cb(1, 2, buf, 12, NULL, ptr, 5)) {
             return false;
         }
         ns_dyn_mem_free(ptr);
@@ -416,8 +417,8 @@ bool test_conn_handler_callbacks()
 
         //This could be moved to own test function,
         //but thread_conn_handler_stub.receive_from_sock_cb must be called successfully
-        if (coap_message_handler_stub.cb) {
-            if (-1 != coap_message_handler_stub.cb(1, NULL, NULL)) {
+        if (coap_message_handler_stub.msg_process_cb) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, NULL, NULL, local_addr)) {
                 return false;
             }
 
@@ -428,7 +429,7 @@ bool test_conn_handler_callbacks()
             coap->uri_path_ptr = &uri;
             coap->uri_path_len = 2;
 
-            if (-1 != coap_message_handler_stub.cb(1, coap, NULL)) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, NULL, local_addr)) {
                 return false;
             }
 
@@ -438,7 +439,7 @@ bool test_conn_handler_callbacks()
                 return false;
             }
 
-            if (-1 != coap_message_handler_stub.cb(1, coap, NULL)) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, NULL, local_addr)) {
                 return false;
             }
 
@@ -446,19 +447,19 @@ bool test_conn_handler_callbacks()
             memset(tr, 0, sizeof(coap_transaction_t));
             tr->local_address[0] = 2;
 
-            if (0 != coap_service_msg_prevalidate_callback_set(1, msg_prevalidate_cb)) {
+            if (0 != coap_service_msg_prevalidate_callback_set(2, msg_prevalidate_cb)) {
                 return false;
             }
 
-            if (-1 != coap_message_handler_stub.cb(1, coap, tr)) {
+            if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, tr, local_addr)) {
                 return false;
             }
 
-            if (0 != coap_service_msg_prevalidate_callback_set(1, NULL)) {
+            if (0 != coap_service_msg_prevalidate_callback_set(2, NULL)) {
                 return false;
             }
 
-            if (2 != coap_message_handler_stub.cb(1, coap, tr)) {
+            if (2 != coap_message_handler_stub.msg_process_cb(1, 1, coap, tr, local_addr)) {
                 return false;
             }
 
@@ -666,8 +667,8 @@ bool test_coap_service_handshake_limit_set()
 
 bool test_coap_service_msg_prevalidate_cb_read_and_set()
 {
-    /* No valid service ID - return failure */
-    if (0 == coap_service_msg_prevalidate_callback_set(0, msg_prevalidate_cb)) {
+    /* No valid socket port - return failure */
+    if (0 == coap_service_msg_prevalidate_callback_set(99, msg_prevalidate_cb)) {
         return false;
     }
 
@@ -681,11 +682,11 @@ bool test_coap_service_msg_prevalidate_cb_read_and_set()
         return false;
     }
 
-    if (0 != coap_service_msg_prevalidate_callback_set(1, msg_prevalidate_cb)) {
+    if (0 != coap_service_msg_prevalidate_callback_set(2, msg_prevalidate_cb)) {
         return false;
     }
 
-    if (0 != coap_service_msg_prevalidate_callback_set(1, NULL)) {
+    if (0 != coap_service_msg_prevalidate_callback_set(2, NULL)) {
         return false;
     }
 
