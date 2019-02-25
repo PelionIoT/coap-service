@@ -388,14 +388,14 @@ void mbedtls_strerror(int ret, char *buf, size_t buflen)
 {
 }
 
-int mbedtls_platform_setup( mbedtls_platform_context *ctx )
+int mbedtls_platform_setup(mbedtls_platform_context *ctx)
 {
     (void)ctx;
 
-    return( 0 );
+    return (0);
 }
 
-void mbedtls_platform_teardown( mbedtls_platform_context *ctx )
+void mbedtls_platform_teardown(mbedtls_platform_context *ctx)
 {
     (void)ctx;
 }
