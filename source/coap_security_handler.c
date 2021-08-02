@@ -386,7 +386,9 @@ static int coap_security_handler_configure_keys(coap_security_t *sec, coap_secur
             mbedtls_ssl_conf_ciphersuites(&sec->_conf, ECJPAKE_SUITES);
 #endif /* !defined(MBEDTLS_SSL_CONF_SINGLE_CIPHERSUITE) */
 
-#if (MBEDTLS_VERSION_MAJOR < 3)
+#if (MBEDTLS_VERSION_MAJOR >= 3)
+            tr_error("FATAL ERROR: support for mbedtls_ssl_set_export_keys_cb() not implemented");
+#else
             //NOTE: If thread starts supporting PSK in other modes, then this will be needed!
             mbedtls_ssl_conf_export_keys_cb(&sec->_conf,
                                             export_key_block,
