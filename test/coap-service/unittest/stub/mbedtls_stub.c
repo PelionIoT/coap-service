@@ -350,11 +350,10 @@ int mbedtls_entropy_add_source(mbedtls_entropy_context *a,
 
 //From pk.h
 #if (MBEDTLS_VERSION_MAJOR >= 3)
-int mbedtls_pk_parse_key( mbedtls_pk_context *ctx,
-              const unsigned char *b, size_t c,
-              const unsigned char *d, size_t e,
-              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
-
+int mbedtls_pk_parse_key(mbedtls_pk_context *ctx,
+                         const unsigned char *b, size_t c,
+                         const unsigned char *d, size_t e,
+                         int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
 #else
 int mbedtls_pk_parse_key(mbedtls_pk_context *a,
                          const unsigned char *b, size_t c,
