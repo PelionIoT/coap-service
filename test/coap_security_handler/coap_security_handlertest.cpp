@@ -14,53 +14,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "CppUTest/TestHarness.h"
+#include "gtest/gtest.h"
 #include "test_coap_security_handler.h"
 #include "mbedtls_stub.h"
 #include "nsdynmemLIB_stub.h"
 
-TEST_GROUP(coap_security_handler)
+class CoapSecurityHandlerTest : public testing::Test
 {
-    void setup() {
-        nsdynmemlib_stub.returnCounter = 0;
-        mbedtls_stub.useCounter = false;
+    void SetUp() {
     }
 
-    void teardown() {
+    void TearDown() {
     }
 };
 
-TEST(coap_security_handler, test_thread_security_create)
+TEST(CoapSecurityHandlerTest, test_thread_security_create)
 {
-    CHECK(test_thread_security_create());
+    ASSERT_TRUE(test_thread_security_create());
 }
 
-TEST(coap_security_handler, test_thread_security_destroy)
+TEST(CoapSecurityHandlerTest, test_thread_security_destroy)
 {
-    CHECK(test_thread_security_destroy());
+    ASSERT_TRUE(test_thread_security_destroy());
 }
 
-TEST(coap_security_handler, test_coap_security_handler_connect)
+#if 0 /* Requires MbedTLS 3.0 updates to coap-service */
+TEST(CoapSecurityHandlerTest, test_coap_security_handler_connect)
 {
-    CHECK(test_coap_security_handler_connect());
+    ASSERT_TRUE(test_coap_security_handler_connect());
+}
+#endif
+
+#if 0 /* Requires MbedTLS 3.0 updates to coap-service */
+TEST(CoapSecurityHandlerTest, test_coap_security_handler_continue_connecting)
+{
+    ASSERT_TRUE(test_coap_security_handler_continue_connecting());
+}
+#endif
+
+TEST(CoapSecurityHandlerTest, test_coap_security_handler_send_message)
+{
+    ASSERT_TRUE(test_coap_security_handler_send_message());
 }
 
-TEST(coap_security_handler, test_coap_security_handler_continue_connecting)
+TEST(CoapSecurityHandlerTest, test_thread_security_send_close_alert)
 {
-    CHECK(test_coap_security_handler_continue_connecting());
+    ASSERT_TRUE(test_thread_security_send_close_alert());
 }
 
-TEST(coap_security_handler, test_coap_security_handler_send_message)
+TEST(CoapSecurityHandlerTest, test_coap_security_handler_read)
 {
-    CHECK(test_coap_security_handler_send_message());
-}
-
-TEST(coap_security_handler, test_thread_security_send_close_alert)
-{
-    CHECK(test_thread_security_send_close_alert());
-}
-
-TEST(coap_security_handler, test_coap_security_handler_read)
-{
-    CHECK(test_coap_security_handler_read());
+    ASSERT_TRUE(test_coap_security_handler_read());
 }

@@ -190,6 +190,44 @@ PROPERTIES
     CXX_STANDARD 11
 )
 
+# coap-security-handler
+set(COAP_SECURITY_HANDLER_TEST_STUBS
+    test/stub/coap_connection_handler_stub.c
+    test/stub/coap_message_handler_stub.c
+    test/stub/coap_service_api_stub.c
+    ${COAP_COMMON_TEST_STUBS}
+)
+
+set(COAP_SECURITY_HANDLER_SOURCES
+    source/coap_security_handler.c
+)
+
+add_executable(coap_security_handler_test EXCLUDE_FROM_ALL
+    ${COAP_SECURITY_HANDLER_SOURCES}
+    test/coap_security_handler/coap_security_handlertest.cpp
+    test/coap_security_handler/test_coap_security_handler.c
+    ${COAP_SECURITY_HANDLER_TEST_STUBS}
+)
+
+add_test(coap_security_handler_test coap_security_handler_test)
+
+if (TARGET check)
+    add_dependencies(check coap_security_handler_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS coap_security_handler_test)
+endif()
+
+target_link_libraries(
+    coap_security_handler_test
+    gtest_main
+)
+
+set_target_properties(coap_security_handler_test
+PROPERTIES
+    CXX_STANDARD 11
+)
+
 include(GoogleTest)
 gtest_discover_tests(coap_connection_handler_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR coap_connection_handler)
 gtest_discover_tests(coap_message_handler_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR coap_message_handler)
