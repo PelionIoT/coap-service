@@ -16,6 +16,7 @@
  */
 #include "test_coap_message_handler.h"
 #include <string.h>
+#include <stdlib.h>
 #include "coap_message_handler.h"
 #include "sn_coap_protocol_stub.h"
 #include "nsdynmemLIB_stub.h"
@@ -484,6 +485,7 @@ bool test_coap_message_handler_exec()
     coap_transaction_t *transact_ptr = transaction_create();
 
     /* Transaction not timed out*/
+    transaction_cb = 0;
     if (0 != coap_message_handler_exec(handle, 0)) {
         return false;
     }

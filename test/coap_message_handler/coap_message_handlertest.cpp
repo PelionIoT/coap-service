@@ -14,61 +14,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "CppUTest/TestHarness.h"
+#include "gtest/gtest.h"
 #include "test_coap_message_handler.h"
 
-TEST_GROUP(coap_message_handler)
+class CoapMessageHandlerTest : public testing::Test
 {
-    void setup() {
+    void SetUp() {
     }
 
-    void teardown() {
+    void TearDown() {
     }
 };
 
-TEST(coap_message_handler, test_coap_message_handler_init)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_init)
 {
-    CHECK(test_coap_message_handler_init());
+    ASSERT_TRUE(test_coap_message_handler_init());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_destroy)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_destroy)
 {
-    CHECK(test_coap_message_handler_destroy());
+    ASSERT_TRUE(test_coap_message_handler_destroy());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_find_transaction)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_find_transaction)
 {
-    CHECK(test_coap_message_handler_find_transaction());
+    ASSERT_TRUE(test_coap_message_handler_find_transaction());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_coap_msg_process)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_coap_msg_process)
 {
-    CHECK(test_coap_message_handler_coap_msg_process());
+    ASSERT_TRUE(test_coap_message_handler_coap_msg_process());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_request_send)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_request_send)
 {
-    CHECK(test_coap_message_handler_request_send());
+    ASSERT_TRUE(test_coap_message_handler_request_send());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_response_send)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_response_send)
 {
-    CHECK(test_coap_message_handler_response_send());
+    ASSERT_TRUE(test_coap_message_handler_response_send());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_request_delete)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_request_delete)
 {
-    CHECK(test_coap_message_handler_request_delete());
+    ASSERT_TRUE(test_coap_message_handler_request_delete());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_request_delete_by_service_id)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_request_delete_by_service_id)
 {
-    CHECK(test_coap_message_handler_request_delete_by_service_id());
+    ASSERT_TRUE(test_coap_message_handler_request_delete_by_service_id());
 }
 
-TEST(coap_message_handler, test_coap_message_handler_exec)
+TEST_F(CoapMessageHandlerTest, test_coap_message_handler_exec)
 {
-    CHECK(test_coap_message_handler_exec());
+    ASSERT_TRUE(test_coap_message_handler_exec());
 }
 
 

@@ -29,5 +29,5 @@ echo "Build coap-service unit tests to folder: ${TEST_DIR}"
 
 mkdir -p ${TEST_DIR}
 cd ${TEST_DIR}
-cmake .. -DCMAKE_BUILD_TYPE=Debug -Denable_coverage_data=ON -DCOAP_SECURITY_AVAILABLE=ON
+cmake .. -DCMAKE_BUILD_TYPE=Debug -Denable_coverage_data=ON
 make check
