@@ -30,6 +30,8 @@ typedef struct {
 
 extern nsdynmemlib_stub_data_t nsdynmemlib_stub;
 
+extern void ns_dyn_mem_free(void *heap_ptr);
+
 #ifdef __cplusplus
 }
 #endif

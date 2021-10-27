@@ -14,70 +14,69 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "CppUTest/TestHarness.h"
+#include "gtest/gtest.h"
 #include "test_coap_connection_handler.h"
 
-TEST_GROUP(coap_connection_handler)
+class CoapConnectionHandlerTest : public testing::Test
 {
-    void setup() {
+    void SetUp() {
     }
 
-    void teardown() {
+    void TearDown() {
     }
 };
 
-TEST(coap_connection_handler, test_connection_handler_create)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerCreate)
 {
-    CHECK(test_connection_handler_create());
+    ASSERT_TRUE(test_connection_handler_create());
 }
 
-TEST(coap_connection_handler, test_connection_handler_destroy)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerDestroy)
 {
-    CHECK(test_connection_handler_destroy());
+    ASSERT_TRUE(test_connection_handler_destroy());
 }
 
-TEST(coap_connection_handler, test_coap_connection_handler_open_connection)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerConnection)
 {
-    CHECK(test_coap_connection_handler_open_connection());
+    ASSERT_TRUE(test_coap_connection_handler_open_connection());
 }
 
-TEST(coap_connection_handler, test_coap_connection_handler_send_data)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerSendData)
 {
-    CHECK(test_coap_connection_handler_send_data());
+    ASSERT_TRUE(test_coap_connection_handler_send_data());
 }
 
-TEST(coap_connection_handler, test_coap_connection_handler_virtual_recv)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerVirtualRecv)
 {
-    CHECK(test_coap_connection_handler_virtual_recv());
+    ASSERT_TRUE(test_coap_connection_handler_virtual_recv());
 }
 
-TEST(coap_connection_handler, test_coap_connection_handler_socket_belongs_to)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerSocketBelongsTo)
 {
-    CHECK(test_coap_connection_handler_socket_belongs_to());
+    ASSERT_TRUE(test_coap_connection_handler_socket_belongs_to());
 }
 
-TEST(coap_connection_handler, test_timer_callbacks)
+TEST_F(CoapConnectionHandlerTest, testTimerCallbacks)
 {
-    CHECK(test_timer_callbacks());
+    ASSERT_TRUE(test_timer_callbacks());
 }
 
-TEST(coap_connection_handler, test_socket_api_callbacks)
+TEST_F(CoapConnectionHandlerTest, testSocketApiCallbacks)
 {
-    CHECK(test_socket_api_callbacks());
+    ASSERT_TRUE(test_socket_api_callbacks());
 }
 
-TEST(coap_connection_handler, test_security_callbacks)
+TEST_F(CoapConnectionHandlerTest, testSecurityCallbacks)
 {
-    CHECK(test_security_callbacks());
+    ASSERT_TRUE(test_security_callbacks());
 }
 
-TEST(coap_connection_handler, test_coap_connection_handler_msg_prevalidate_cb_read_and_set)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerMsgPrevalidateCbReadAndSet)
 {
-    CHECK(test_coap_connection_handler_msg_prevalidate_cb_read_and_set());
+    ASSERT_TRUE(test_coap_connection_handler_msg_prevalidate_cb_read_and_set());
 }
 
-TEST(coap_connection_handler, test_coap_connection_handler_find_by_socket_port)
+TEST_F(CoapConnectionHandlerTest, testConnectionHandlerFindBySocketPort)
 {
-    CHECK(test_coap_connection_handler_find_by_socket_port());
+    ASSERT_TRUE(test_coap_connection_handler_find_by_socket_port());
 }
-
