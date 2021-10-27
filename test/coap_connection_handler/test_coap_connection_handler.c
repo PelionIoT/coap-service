@@ -500,7 +500,7 @@ bool test_security_callbacks()
     }
 
     if (coap_security_handler_stub.send_cb) {
-        coap_security_handler_stub.send_cb(0, buf, 22, &buf, 16);
+        coap_security_handler_stub.send_cb(0, buf, &buf, 16);
     }
     if (coap_security_handler_stub.receive_cb) {
         coap_security_handler_stub.receive_cb(0, (uint8_t *)&buf, 16);
