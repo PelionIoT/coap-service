@@ -268,6 +268,7 @@ bool test_coap_security_handler_send_message()
     }
 
     mbedtls_stub.expected_int = 6;
+    mbedtls_stub.useCounter = false;
     unsigned char cbuf[6];
     if (6 != coap_security_handler_send_message(handle, cbuf, 6)) {
         return false;

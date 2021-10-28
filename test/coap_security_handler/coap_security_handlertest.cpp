@@ -38,19 +38,15 @@ TEST(CoapSecurityHandlerTest, test_thread_security_destroy)
     ASSERT_TRUE(test_thread_security_destroy());
 }
 
-#if 0 /* Requires MbedTLS 3.0 updates to coap-service */
 TEST(CoapSecurityHandlerTest, test_coap_security_handler_connect)
 {
     ASSERT_TRUE(test_coap_security_handler_connect());
 }
-#endif
 
-#if 0 /* Requires MbedTLS 3.0 updates to coap-service */
 TEST(CoapSecurityHandlerTest, test_coap_security_handler_continue_connecting)
 {
     ASSERT_TRUE(test_coap_security_handler_continue_connecting());
 }
-#endif
 
 TEST(CoapSecurityHandlerTest, test_coap_security_handler_send_message)
 {

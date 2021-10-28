@@ -18,6 +18,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include "nsdynmemLIB_stub.h"
+#include "nsdynmemLIB.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/ssl.h"
 #include "coap_connection_handler.h"
@@ -230,7 +231,7 @@ bool test_coap_connection_handler_virtual_recv()
 
     ns_timer_stub.int8_value = 0;
     nsdynmemlib_stub.returnCounter = 3;
-    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, (uint8_t *)&buf, 1)) {
+    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, buf, 1)) {
         return false;
     }
 
@@ -239,13 +240,13 @@ bool test_coap_connection_handler_virtual_recv()
 
     ns_timer_stub.int8_value = -1;
     nsdynmemlib_stub.returnCounter = 3;
-    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, (uint8_t *)&buf, 1)) {
+    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, buf, 1)) {
         return false;
     }
 
     ns_timer_stub.int8_value = 0;
     nsdynmemlib_stub.returnCounter = 3;
-    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, (uint8_t *)&buf, 1)) {
+    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, buf, 1)) {
         return false;
     }
 
@@ -259,24 +260,24 @@ bool test_coap_connection_handler_virtual_recv()
     }
 
     nsdynmemlib_stub.returnCounter = 3;
-    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, (uint8_t *)&buf, 1)) {
+    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, buf, 1)) {
         return false;
     }
 
     nsdynmemlib_stub.returnCounter = 1;
     coap_security_handler_stub.int_value = 0;
-    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, (uint8_t *)&buf, 1)) {
+    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, buf, 1)) {
         return false;
     }
 
     nsdynmemlib_stub.returnCounter = 1;
-    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, (uint8_t *)&buf, 1)) {
+    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, buf, 1)) {
         return false;
     }
 
     nsdynmemlib_stub.returnCounter = 1;
     coap_security_handler_stub.int_value = MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY;
-    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, (uint8_t *)&buf, 1)) {
+    if (0 != coap_connection_handler_virtual_recv(handler2, buf, 12, buf, 1)) {
         return false;
     }
 
@@ -293,7 +294,7 @@ bool test_coap_connection_handler_virtual_recv()
     }
 
     nsdynmemlib_stub.returnCounter = 3;
-    if (0 != coap_connection_handler_virtual_recv(handler3, buf, 12, (uint8_t *)&buf, 1)) {
+    if (0 != coap_connection_handler_virtual_recv(handler3, buf, 12, buf, 1)) {
         return false;
     }
 
@@ -349,7 +350,7 @@ bool test_timer_callbacks()
     ns_timer_stub.int8_value = 0;
     nsdynmemlib_stub.returnCounter = 3;
     ns_timer_stub.int8_value = 5;
-    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, (uint8_t *)&buf, 1)) {
+    if (-1 != coap_connection_handler_virtual_recv(handler, buf, 12, buf, 1)) {
         return false;
     }
 
@@ -503,7 +504,7 @@ bool test_security_callbacks()
         coap_security_handler_stub.send_cb(0, buf, &buf, 16);
     }
     if (coap_security_handler_stub.receive_cb) {
-        coap_security_handler_stub.receive_cb(0, (uint8_t *)&buf, 16);
+        coap_security_handler_stub.receive_cb(0, buf, 16);
     }
 
     connection_handler_destroy(handler, false);

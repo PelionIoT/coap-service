@@ -27,7 +27,6 @@ typedef struct tsh {
     int values[10];
 
     int (*send_cb)(int8_t socket_id, void *handle, const void *buf, size_t);
-    //int (*send_cb)(int8_t socket_id, const uint8_t *address_ptr, uint16_t port, const void *, size_t);
     int (*receive_cb)(int8_t socket_id, unsigned char *, size_t);
     void (*start_timer_cb)(int8_t timer_id, uint32_t min, uint32_t fin);
     int (*timer_status_cb)(int8_t timer_id);
