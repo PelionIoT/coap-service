@@ -14,115 +14,116 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "CppUTest/TestHarness.h"
+#include "gtest/gtest.h"
 #include "test_coap_service_api.h"
 
-TEST_GROUP(coap_service_api)
+class CoapServiceAPITest : public testing::Test
 {
-    void setup() {
+    void SetUp() {
     }
 
-    void teardown() {
+    void TearDown() {
     }
 };
 
-TEST(coap_service_api, test_coap_service_initialize)
+
+TEST_F(CoapServiceAPITest, test_coap_service_initialize)
 {
-    CHECK(test_coap_service_initialize());
+    ASSERT_TRUE(test_coap_service_initialize());
 }
 
-TEST(coap_service_api, test_coap_service_delete)
+TEST_F(CoapServiceAPITest, test_coap_service_delete)
 {
-    CHECK(test_coap_service_delete());
+    ASSERT_TRUE(test_coap_service_delete());
 }
 
-TEST(coap_service_api, test_coap_service_virtual_socket_recv)
+TEST_F(CoapServiceAPITest, test_coap_service_virtual_socket_recv)
 {
-    CHECK(test_coap_service_virtual_socket_recv());
+    ASSERT_TRUE(test_coap_service_virtual_socket_recv());
 }
 
-TEST(coap_service_api, test_coap_service_virtual_socket_set_cb)
+TEST_F(CoapServiceAPITest, test_coap_service_virtual_socket_set_cb)
 {
-    CHECK(test_coap_service_virtual_socket_set_cb());
+    ASSERT_TRUE(test_coap_service_virtual_socket_set_cb());
 }
 
-TEST(coap_service_api, test_coap_service_register_uri)
+TEST_F(CoapServiceAPITest, test_coap_service_register_uri)
 {
-    CHECK(test_coap_service_register_uri());
+    ASSERT_TRUE(test_coap_service_register_uri());
 }
 
-TEST(coap_service_api, test_coap_service_unregister_uri)
+TEST_F(CoapServiceAPITest, test_coap_service_unregister_uri)
 {
-    CHECK(test_coap_service_unregister_uri());
+    ASSERT_TRUE(test_coap_service_unregister_uri());
 }
 
-TEST(coap_service_api, test_coap_service_request_send)
+TEST_F(CoapServiceAPITest, test_coap_service_request_send)
 {
-    CHECK(test_coap_service_request_send());
+    ASSERT_TRUE(test_coap_service_request_send());
 }
 
-TEST(coap_service_api, test_coap_service_request_delete)
+TEST_F(CoapServiceAPITest, test_coap_service_request_delete)
 {
-    CHECK(test_coap_service_request_delete());
+    ASSERT_TRUE(test_coap_service_request_delete());
 }
 
-TEST(coap_service_api, test_coap_service_request_delete_by_service_id)
+TEST_F(CoapServiceAPITest, test_coap_service_request_delete_by_service_id)
 {
-    CHECK(test_coap_service_request_delete_by_service_id());
+    ASSERT_TRUE(test_coap_service_request_delete_by_service_id());
 }
 
-TEST(coap_service_api, test_coap_service_response_send)
+TEST_F(CoapServiceAPITest, test_coap_service_response_send)
 {
-    CHECK(test_coap_service_response_send());
+    ASSERT_TRUE(test_coap_service_response_send());
 }
 
-TEST(coap_service_api, test_coap_callbacks)
+TEST_F(CoapServiceAPITest, test_coap_callbacks)
 {
-    CHECK(test_coap_callbacks());
+    ASSERT_TRUE(test_coap_callbacks());
 }
 
-TEST(coap_service_api, test_eventOS_callbacks)
+TEST_F(CoapServiceAPITest, test_eventOS_callbacks)
 {
-    CHECK(test_eventOS_callbacks());
+    ASSERT_TRUE(test_eventOS_callbacks());
 }
 
-TEST(coap_service_api, test_conn_handler_callbacks)
+TEST_F(CoapServiceAPITest, test_conn_handler_callbacks)
 {
-    CHECK(test_conn_handler_callbacks());
+    ASSERT_TRUE(test_conn_handler_callbacks());
 }
 
-TEST(coap_service_api, test_certificate_set)
+TEST_F(CoapServiceAPITest, test_certificate_set)
 {
-    CHECK(test_certificate_set());
+    ASSERT_TRUE(test_certificate_set());
 }
 
-TEST(coap_service_api, test_handshake_timeout_set)
+TEST_F(CoapServiceAPITest, test_handshake_timeout_set)
 {
-    CHECK(test_handshake_timeout_set());
+    ASSERT_TRUE(test_handshake_timeout_set());
 }
 
-TEST(coap_service_api, test_coap_duplcate_msg_buffer_set)
+TEST_F(CoapServiceAPITest, test_coap_duplcate_msg_buffer_set)
 {
-    CHECK(test_coap_duplcate_msg_buffer_set());
+    ASSERT_TRUE(test_coap_duplcate_msg_buffer_set());
 }
 
-TEST(coap_service_api, test_coap_service_get_internal_timer_ticks)
+TEST_F(CoapServiceAPITest, test_coap_service_get_internal_timer_ticks)
 {
-    CHECK(test_coap_service_get_internal_timer_ticks())
+    ASSERT_TRUE(test_coap_service_get_internal_timer_ticks());
 }
 
-TEST(coap_service_api, test_coap_service_if_find_by_socket)
+TEST_F(CoapServiceAPITest, test_coap_service_if_find_by_socket)
 {
-    CHECK(test_coap_service_if_find_by_socket())
+    ASSERT_TRUE(test_coap_service_if_find_by_socket());
 }
 
-TEST(coap_service_api, test_coap_service_handshake_limit_set)
+TEST_F(CoapServiceAPITest, test_coap_service_handshake_limit_set)
 {
-    CHECK(test_coap_service_handshake_limit_set())
+    ASSERT_TRUE(test_coap_service_handshake_limit_set());
 }
 
-TEST(coap_service_api, test_coap_service_msg_prevalidate_cb_read_and_set)
+TEST_F(CoapServiceAPITest, test_coap_service_msg_prevalidate_cb_read_and_set)
 {
-    CHECK(test_coap_service_msg_prevalidate_cb_read_and_set())
+    ASSERT_TRUE(test_coap_service_msg_prevalidate_cb_read_and_set());
 }
 

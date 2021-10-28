@@ -48,7 +48,7 @@ if (enable_coverage_data)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif ()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -DNS_USE_EXTERNAL_MBED_TLS=ON")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNS_USE_EXTERNAL_MBED_TLS=ON")
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 
 set(COAP_COMMON_TEST_STUBS
@@ -67,6 +67,25 @@ set(COAP_COMMON_TEST_STUBS
     test/stub/system_timer_stub.c
     test/stub/timeout_stub.c
 )
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test/stubs)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/coap-service)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test/stub)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../nanostack/nanostack)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-libservice/mbed-client-libservice/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-libservice/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/libService)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-trace)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-trace/mbed-trace)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-randlib/mbed-client-randlib)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap/mbed-coap)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../event-loop/nanostack-event-loop)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbedtls/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbedtls/include/mbedtls)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../event-loop/source)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap/source/include)
 
 # coap-connection-handler
 set(COAP_CONNECTION_HANDLER_TEST_STUBS
@@ -99,48 +118,10 @@ endif()
 # define includes after add_executable
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/coap-service)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/include)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/test/stub)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../nanostack/nanostack)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-libservice/mbed-client-libservice/)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-libservice/)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../libService/libService)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-trace)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-trace/mbed-trace)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-randlib/mbed-client-randlib)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap/mbed-coap)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../event-loop/nanostack-event-loop)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../mbedtls/include)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../mbedtls/include/mbedtls)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../event-loop/source)
-#target_include_directories(coap_connection_handler_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap/source/include)
-
 target_link_libraries(
     coap_connection_handler_test
     gtest_main
 )
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test/stubs)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/coap-service)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test/stub)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../nanostack/nanostack)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-libservice/mbed-client-libservice/)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-libservice/)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/libService)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-trace)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-trace/mbed-trace)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libService/exported-libs/mbed-client-randlib/mbed-client-randlib)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap/mbed-coap)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../event-loop/nanostack-event-loop)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbedtls/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbedtls/include/mbedtls)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../event-loop/source)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../mbed-coap/source/include)
-
 
 # GTest framework requires C++ version 11
 set_target_properties(coap_connection_handler_test
@@ -228,9 +209,52 @@ PROPERTIES
     CXX_STANDARD 11
 )
 
+# coap-service-api
+set(COAP_SERVICE_API_TEST_STUBS
+    test/stub/coap_connection_handler_stub.c
+    test/stub/coap_message_handler_stub.c
+    test/stub/coap_security_handler_stub.c
+    ${COAP_COMMON_TEST_STUBS}
+)
+# coap-service-api.c is includsed directly to test code
+#set(COAP_SERVICE_API_SOURCES
+#    source/coap_service_api.c
+#)
+
+add_executable(coap_service_api_test EXCLUDE_FROM_ALL
+    #${COAP_SERVICE_API_SOURCES}
+    test/coap_service_api/coap_service_apitest.cpp
+    test/coap_service_api/test_coap_service_api.c
+    ${COAP_SERVICE_API_TEST_STUBS}
+)
+
+# c-file included directly to the test_coap_service_api.c
+target_include_directories(coap_service_api_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
+
+add_test(coap_service_api_test coap_service_api_test)
+
+if (TARGET check)
+    add_dependencies(check coap_service_api_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS coap_service_api_test)
+endif()
+
+target_link_libraries(
+    coap_service_api_test
+    gtest_main
+)
+
+set_target_properties(coap_service_api_test
+PROPERTIES
+    CXX_STANDARD 11
+)
+
 include(GoogleTest)
 gtest_discover_tests(coap_connection_handler_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR coap_connection_handler)
 gtest_discover_tests(coap_message_handler_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR coap_message_handler)
+gtest_discover_tests(coap_security_handler_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR coap_security_handler_test)
+gtest_discover_tests(coap_service_api_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR coap_service_api_test)
 
 if (enable_coverage_data AND ${CMAKE_PROJECT_NAME} STREQUAL "coap-service-unit-test")
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html")
