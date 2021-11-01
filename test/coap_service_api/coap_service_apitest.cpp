@@ -17,12 +17,13 @@
 #include "gtest/gtest.h"
 #include "test_coap_service_api.h"
 
-class CoapServiceAPITest : public testing::Test
-{
-    void SetUp() {
+class CoapServiceAPITest : public testing::Test {
+    void SetUp()
+    {
     }
 
-    void TearDown() {
+    void TearDown()
+    {
     }
 };
 

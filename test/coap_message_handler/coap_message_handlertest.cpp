@@ -17,12 +17,13 @@
 #include "gtest/gtest.h"
 #include "test_coap_message_handler.h"
 
-class CoapMessageHandlerTest : public testing::Test
-{
-    void SetUp() {
+class CoapMessageHandlerTest : public testing::Test {
+    void SetUp()
+    {
     }
 
-    void TearDown() {
+    void TearDown()
+    {
     }
 };
 

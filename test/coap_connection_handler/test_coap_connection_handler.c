@@ -355,7 +355,7 @@ bool test_timer_callbacks()
     }
 
     coap_security_handler_stub.timer_status_cb = NULL;
-    
+
     //Note next tests will affect ns_timer test (cycle & cycle_count
     if (coap_security_handler_stub.start_timer_cb) {
         coap_security_handler_stub.start_timer_cb(1, 0, 0);

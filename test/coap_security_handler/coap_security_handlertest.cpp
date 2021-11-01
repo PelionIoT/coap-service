@@ -19,12 +19,13 @@
 #include "mbedtls_stub.h"
 #include "nsdynmemLIB_stub.h"
 
-class CoapSecurityHandlerTest : public testing::Test
-{
-    void SetUp() {
+class CoapSecurityHandlerTest : public testing::Test {
+    void SetUp()
+    {
     }
 
-    void TearDown() {
+    void TearDown()
+    {
     }
 };
 
