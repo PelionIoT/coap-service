@@ -397,11 +397,12 @@ void mbedtls_ssl_conf_dtls_cookies(mbedtls_ssl_config *conf,
                                    void *p_cookie)
 {
     if (mbedtls_stub.cookie_obj && f_cookie_check && mbedtls_stub.cookie_len > 0) {
-        f_cookie_check(mbedtls_stub.cookie_obj, &mbedtls_stub.cookie_value, mbedtls_stub.cookie_len, NULL, 0);
+        f_cookie_check(mbedtls_stub.cookie_obj, (const unsigned char *)&mbedtls_stub.cookie_value, mbedtls_stub.cookie_len, NULL, 0);
     }
+
     if (mbedtls_stub.cookie_obj && f_cookie_write && mbedtls_stub.cookie_len > 0) {
         unsigned char out[16];
-        unsigned char *ptr = &out;
+        unsigned char *ptr = &out[0];
         f_cookie_write(mbedtls_stub.cookie_obj, &ptr, ptr + mbedtls_stub.cookie_len, NULL, 0);
     }
 }

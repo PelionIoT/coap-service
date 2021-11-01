@@ -21,7 +21,7 @@
 #include "mbedtls_stub.h"
 #include "mbedtls/ssl.h"
 
-static int send_to_socket(int8_t socket_id, void *handle, const unsigned char *buf, size_t len)
+static int send_to_socket(int8_t socket_id, void *handle, const void *buf, size_t len)
 {
 
 }
@@ -98,9 +98,9 @@ bool test_coap_security_handler_connect()
         return false;
     }
 
-    unsigned char pw = "pwd";
+    unsigned char *pw = "pwd";
     coap_security_keys_t keys;
-    keys._key = &pw;
+    keys._key = pw;
     keys._key_len = 3;
     if (-1 != coap_security_handler_connect_non_blocking(NULL, true, DTLS, keys, 0, 1)) {
         return false;
@@ -268,8 +268,9 @@ bool test_coap_security_handler_send_message()
     }
 
     mbedtls_stub.expected_int = 6;
+    mbedtls_stub.useCounter = false;
     unsigned char cbuf[6];
-    if (6 != coap_security_handler_send_message(handle, &cbuf, 6)) {
+    if (6 != coap_security_handler_send_message(handle, cbuf, 6)) {
         return false;
     }
 
@@ -314,7 +315,7 @@ bool test_coap_security_handler_read()
 
     mbedtls_stub.expected_int = 6;
     unsigned char cbuf[6];
-    if (6 != coap_security_handler_read(handle, &cbuf, 6)) {
+    if (6 != coap_security_handler_read(handle, cbuf, 6)) {
         return false;
     }
 

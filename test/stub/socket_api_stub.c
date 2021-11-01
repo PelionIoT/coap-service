@@ -14,6 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <string.h>
 #include "socket_api.h"
 #include "socket_api_stub.h"
 

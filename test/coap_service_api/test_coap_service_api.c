@@ -16,6 +16,7 @@
  */
 #include "test_coap_service_api.h"
 #include <string.h>
+#include <stdlib.h>
 #include "coap_service_api.h"
 #include "nsdynmemLIB_stub.h"
 #include "coap_connection_handler_stub.h"
@@ -45,7 +46,7 @@ int virtual_sock_send_cb(int8_t service_id, uint8_t destination_addr_ptr[static 
     return 2;
 }
 
-int msg_prevalidate_cb(int8_t interface_id, uint8_t address[static 16])
+int msg_prevalidate_cb(int8_t local_interface_id, uint8_t local_address[static 16], uint16_t local_port, int8_t recv_interface_id, uint8_t source_address[static 16], uint16_t source_port, char *coap_uri)
 {
     return 1;
 }
@@ -119,7 +120,7 @@ bool test_coap_service_delete()
 bool test_coap_service_virtual_socket_recv()
 {
     uint8_t buf[16];
-    if (-1 != coap_service_virtual_socket_recv(1, &buf, 10, NULL, 0)) {
+    if (-1 != coap_service_virtual_socket_recv(1, buf, 10, NULL, 0)) {
         return false;
     }
 
@@ -133,7 +134,7 @@ bool test_coap_service_virtual_socket_recv()
     }
 
     thread_conn_handler_stub.int_value = 5;
-    if (5 != coap_service_virtual_socket_recv(1, &buf, 10, NULL, 0)) {
+    if (5 != coap_service_virtual_socket_recv(1, buf, 10, NULL, 0)) {
         return false;
     }
 
@@ -252,7 +253,7 @@ bool test_coap_service_request_send()
 {
     uint8_t buf[16];
     coap_message_handler_stub.uint16_value = 6;
-    if (6 != coap_service_request_send(0, 0, &buf, 0, 0, 0, NULL, 0, NULL, 0, NULL)) {
+    if (6 != coap_service_request_send(0, 0, buf, 0, 0, 0, NULL, 0, NULL, 0, NULL)) {
         return false;
     }
     return true;
@@ -260,7 +261,7 @@ bool test_coap_service_request_send()
 
 bool test_coap_service_request_delete()
 {
-    if (0 != coap_service_request_delete(NULL, 0)) {
+    if (0 != coap_service_request_delete(0, 0)) {
         return false;
     }
     return true;
@@ -312,7 +313,7 @@ bool test_coap_callbacks()
     sn_nsdl_addr_s addr;
     addr.addr_len = 2;
     addr.port = 4;
-    addr.addr_ptr = &data;
+    addr.addr_ptr = data;
     if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(NULL, 0, &addr, NULL)) {
         return false;
     }
@@ -320,18 +321,18 @@ bool test_coap_callbacks()
     coap_transaction_t *tr = (coap_transaction_t *)malloc(sizeof(coap_transaction_t));
     memset(tr, 0, sizeof(coap_transaction_t));
 
-    if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(&data, 0, &addr, tr)) {
+    if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(data, 0, &addr, tr)) {
         return false;
     }
 
     tr->service_id = 1;
     thread_conn_handler_stub.int_value = -2;
-    if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(&data, 0, &addr, tr)) {
+    if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(data, 0, &addr, tr)) {
         return false;
     }
 
     nsdynmemlib_stub.returnCounter = 1;
-    if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(&data, 2, &addr, tr)) {
+    if (0 != coap_message_handler_stub.coap_ptr->sn_coap_tx_callback(data, 2, &addr, tr)) {
         return false;
     }
 
@@ -356,6 +357,7 @@ bool test_eventOS_callbacks()
     thread_conn_handler_stub.handler_obj = (coap_conn_handler_t *)malloc(sizeof(coap_conn_handler_t));
     memset(thread_conn_handler_stub.handler_obj, 0, sizeof(coap_conn_handler_t));
     nsdynmemlib_stub.returnCounter = 1;
+    thread_conn_handler_stub.int_value = 0;
     if (1 != coap_service_initialize(1, 2, 0, NULL, NULL)) {
         return false;
     }
@@ -426,7 +428,7 @@ bool test_conn_handler_callbacks()
             memset(coap, 0, sizeof(sn_coap_hdr_s));
 
             uint8_t  uri[2] = "as";
-            coap->uri_path_ptr = &uri;
+            coap->uri_path_ptr = uri;
             coap->uri_path_len = 2;
 
             if (-1 != coap_message_handler_stub.msg_process_cb(1, 1, coap, NULL, local_addr)) {

@@ -1,7 +1,5 @@
-#!/bin/bash
-#
 #################################################################################
-## Copyright (c) 2021 Pelion. All rights reserved.
+## Copyright 2021 Pelion.
 ##
 ## SPDX-License-Identifier: Apache-2.0
 ##
@@ -17,17 +15,14 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 #################################################################################
-#
-#
-# Run unit tests and produce *.xml output to build folder.
-#
 
-TEST_DIR="build"
+#Googletest for testing
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
+)
 
-echo "Build coap-service unit tests to folder: ${TEST_DIR}"
-
-
-mkdir -p ${TEST_DIR}
-cd ${TEST_DIR}
-cmake .. -DCMAKE_BUILD_TYPE=Debug -Denable_coverage_data=ON
-make check
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)

@@ -23,7 +23,7 @@
  * Functionality: Parses CoAP Header
  *
  */
-
+#include <stdlib.h>
 #include "ns_types.h"
 #include "sn_coap_protocol.h"
 #include "sn_coap_parser_stub.h"
